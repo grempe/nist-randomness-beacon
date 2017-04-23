@@ -4,7 +4,13 @@ This is a simple wrapper for the [NIST Beacon API](https://beacon.nist.gov/home)
 
 ## Installation
 
-`npm install nist-beacon`
+```
+npm install nist-beacon
+```
+or
+```
+yarn add nist-beacon
+```
 
 ## Usage
 
