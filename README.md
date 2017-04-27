@@ -1,5 +1,7 @@
 # nist-randomness-beacon
 
+[![npm version](https://badge.fury.io/js/nist-randomness-beacon.svg)](https://badge.fury.io/js/nist-randomness-beacon)
+
 This is a wrapper for the [NIST Randomness Beacon](https://beacon.nist.gov/home). The NIST Beacon:
 
 * publishes 512 bits of high quality randomness every 60 seconds
