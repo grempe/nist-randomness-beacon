@@ -1,22 +1,40 @@
 {
-  "author": "charles guo",
-  "name": "nist-beacon",
-  "description": "Javascript wrapper for the NIST Beacon API.",
-  "keywords": ["nist", "beacon"],
-  "version": "0.1.4",
+  "contributors": [
+    {
+      "name": "Glenn Rempe",
+      "email": "glenn@rempe.us",
+      "url": "https://www.rempe.us/"
+    },
+    {
+      "name": "Charles Guo"
+    }
+  ],
+  "name": "nist-randomness-beacon",
+  "description": "A Javascript wrapper for the NIST Randomness Beacon API",
+  "keywords": [
+    "nist",
+    "randomness",
+    "random",
+    "crypto",
+    "hash",
+    "beacon"
+  ],
+  "version": "1.0.0",
   "repository": {
-    "type": "git",
-    "url": "git://github.com/charlescharles/nist-beacon.git"
+    "url": "https://github.com/grempe/nist-randomness-beacon"
   },
-  "main": "./lib/nist-beacon",
-  "directories": {
-    "lib": "./lib"
-  },
+  "main": "index.js",
   "dependencies": {
-    "xml2js":"~0.4.17"
+    "request": "^2.81.0",
+    "xml2js": "~0.4.17"
   },
-  "engines": {
-    "node": "*"
+  "devDependencies": {
+    "mocha": "^3.3.0",
+    "should": "^11.2.1"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/mocha",
+    "watch": "node_modules/.bin/mocha -w"
   },
   "license": "MIT"
 }
