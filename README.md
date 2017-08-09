@@ -15,6 +15,11 @@ There are many uses for these random values. However, DO NOT use these
 random values as cryptographic key material! They are public and
 explicitly not intended for that use. You have been warned!!!
 
+## Features
+
+* Converts Beacon response into a Javascript object
+* Validates the response format and signature
+
 ## Installation
 
 One of:
