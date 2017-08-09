@@ -131,16 +131,16 @@ let _parseBeaconResponse = function (xml, cb) {
     if (isValidSignature(obj)) {
       cb(null, obj)
     } else {
-      cb('Invalid beacon signature')
+      cb('Invalid beacon response')
     }
 
   })
 }
 
 function reverse (src) {
-  var buffer = new Buffer(src.length)
+  let buffer = new Buffer(src.length)
 
-  for (var i = 0, j = src.length - 1; i <= j; ++i, --j) {
+  for (let i = 0, j = src.length - 1; i <= j; ++i, --j) {
     buffer[i] = src[j]
     buffer[j] = src[i]
   }
@@ -171,13 +171,15 @@ let isValidSignature = function (res) {
   // Create a bytewise reversed version of the signature.
   // This is necessary because Beacon signs with Microsoft CryptoAPI which outputs
   // the signature as little-endian instead of big-endian
-  if (!verifier.verify(BEACON_CERT, reverse(new Buffer(res.signatureValue, 'hex'))) {
+  let signature = new Buffer(res.signatureValue, 'hex')
+  if (!verifier.verify(BEACON_CERT, reverse(signature))) {
     return false;
   }
 
-  // TODO: The output value is SHA-512 hash of the signature
-
-  return true;
+  // The output value is the SHA-512 hash of the signature
+  let hash = crypto.createHash('RSA-SHA512')
+  hash.update(signature)
+  return res.outputValue.toLowerCase() === hash.digest('hex')
 }
 
 let isValidTimestamp = function (timestamp) {
