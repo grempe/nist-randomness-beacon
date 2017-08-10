@@ -3,7 +3,7 @@
 const request = require('request')
 const xml2js = require('xml2js')
 const crypto = require('crypto')
-const Int64BE = require("int64-buffer").Int64BE
+const Int64BE = require('int64-buffer').Int64BE
 
 // Must have trailing slash
 const BEACON_API_URI_BASE = 'https://beacon.nist.gov/rest/record/'
@@ -127,13 +127,9 @@ let _parseBeaconResponse = function (xml, cb) {
     // 2 - Time between values is greater than the frequency, but the chain is still intact
     obj.statusCode = parseInt(parsed.record.statusCode[0], 10)
 
-    // Validate the signature before passing to caller
-    if (isValidSignature(obj)) {
-      cb(null, obj)
-    } else {
-      cb('Invalid beacon response')
-    }
+    obj.validSignature = isValidSignature(obj)
 
+    cb(null, obj)
   })
 }
 
@@ -173,7 +169,7 @@ let isValidSignature = function (res) {
   // the signature as little-endian instead of big-endian
   let signature = new Buffer(res.signatureValue, 'hex')
   if (!verifier.verify(BEACON_CERT, reverse(signature))) {
-    return false;
+    return false
   }
 
   // The output value is the SHA-512 hash of the signature
