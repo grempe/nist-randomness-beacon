@@ -5,7 +5,7 @@ const beacon = require('../index')
 describe('beacon.current known value', function () {
   it('callback', function (done) {
     beacon.current(1493245860, function (err, res) {
-      (err === null).should.be.true
+      if (err !== null) done(err)
       res.should.have.property('version', 'Version 1.0')
       res.should.have.property('frequency', 60)
       res.should.have.property('timeStamp', 1493245860)

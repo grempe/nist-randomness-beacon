@@ -15,13 +15,18 @@ There are many uses for these random values. However, DO NOT use these
 random values as cryptographic key material! They are public and
 explicitly not intended for that use. You have been warned!!!
 
+## Features
+
+* Converts Beacon response into a Javascript object
+* Validates the response format and signature
+
 ## Installation
 
 One of:
 
 ```
-npm install nist-beacon --save
-yarn add nist-beacon
+npm install nist-randomness-beacon --save
+yarn add nist-randomness-beacon
 ```
 
 ## Usage Example
@@ -29,7 +34,7 @@ yarn add nist-beacon
 ### Node.js
 
 ```javascript
-let beacon = require('nist-beacon')
+let beacon = require('nist-randomness-beacon')
 
 // Note: Returns timestamp measured in seconds since the UNIX Epoch
 // and not milliseconds as Javascript does by default. The NIST

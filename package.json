@@ -6,6 +6,10 @@
       "url": "https://www.rempe.us/"
     },
     {
+      "name": "Richard Schneider",
+      "email": "makaretu@gmail.com"
+    },
+    {
       "name": "Charles Guo"
     }
   ],
@@ -25,6 +29,7 @@
   },
   "main": "index.js",
   "dependencies": {
+    "int64-buffer": "^0.1.9",
     "request": "^2.81.0",
     "xml2js": "~0.4.17"
   },
