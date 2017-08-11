@@ -15,6 +15,11 @@ There are many uses for these random values. However, DO NOT use these
 random values as cryptographic key material! They are public and
 explicitly not intended for that use. You have been warned!!!
 
+Please also note that there is currently an issue with invalid signatures
+on NIST Beacon blocks after `1493245860`. More details on this can be found
+on the [NIST Beacon homepage](https://beacon.nist.gov/home), and in 
+[this Github issue](https://github.com/urda/nistbeacon/issues/26).
+
 ## Features
 
 * Converts Beacon response into a Javascript object
