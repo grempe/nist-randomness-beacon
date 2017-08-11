@@ -2,8 +2,8 @@
 
 const beacon = require('../index')
 
-describe('beacon.current known value', function () {
-  it('callback', function (done) {
+describe('beacon.current', function () {
+  it('should return all expected values for a specific timestamp', function (done) {
     beacon.current(1493245860, function (err, res) {
       if (err !== null) done(err)
       res.should.have.property('version', 'Version 1.0')
@@ -20,10 +20,26 @@ describe('beacon.current known value', function () {
     })
   })
 
-  // The beacon is currently signing with invalid signatures :-(
-  it('callback', function (done) {
-    beacon.last(function (err, res) {
+  // Handle NIST Signature Issues Gracefully
+  // See : https://github.com/urda/nistbeacon/issues/26
+
+  // Good signature boundary
+  it('should validate signature with last known good timestamp', function (done) {
+    beacon.current(1495837080, function (err, res) {
       if (err !== null) done(err)
+      res.should.have.property('signatureValue', '4E492DD12EF7D10867F2BBECDD783B3143FB284E71B43C255939ACF0C1897BCAC01A7140564D97572479EADEF958595A4B253948475FC941B9A22CE22287404E79F72B3BFE6332688F3E403E6A8941ECF019962CBB8C5D6235DD26029C4FCD4C0936EEA7CBF521F2DE114054323D1A07740EF207C422C8F44FA0978572A8E396BF8037CDA6A83FFEE7FA04E114F14EFFEC9DCD3B4918520976F707E8EA318D18988CBF9C8890F3F33624673F357A666270336B47420AB69BC8E9F86694AB34834099C5D1BD8C71D4390869AF4275E3CAC95618FDBC1A6238FD34CCFA6A132582E531219904ED34214059043D100595B5DF1844FB1D1D7D6F214EFDF391308657')
+      res.signatureValue.length.should === 512
+      res.should.have.property('validSignature', true)
+      done()
+    })
+  })
+
+  // Broken signature boundary
+  it('should not validate signature after last known good timestamp', function (done) {
+    beacon.current(1496176860, function (err, res) {
+      if (err !== null) done(err)
+      res.should.have.property('signatureValue', '77555F6F9AD9F835DAA52A333DC4EF6814329D48BFFD5409E839058927BA739F2460F1433BAB6291F74B07853F552DA9DE6F7B92649450795D2432504B277575DC55EF124EE666B1E5B04DBE35B192F0906384EDA7C081366A268A980F47F75565A7556D77DCFA7B1602B93A33E6A9AD918EB628BC88051284222A6174683F2D')
+      res.signatureValue.length.should === 256
       res.should.have.property('validSignature', false)
       done()
     })
