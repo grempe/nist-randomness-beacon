@@ -35,12 +35,23 @@ describe('beacon.current', function () {
   })
 
   // Broken signature boundary
-  it('should not validate signature after last known good timestamp', function (done) {
+  it('should not validate signature during the broken cert period', function (done) {
     beacon.current(1496176860, function (err, res) {
       if (err !== null) done(err)
       res.should.have.property('signatureValue', '77555F6F9AD9F835DAA52A333DC4EF6814329D48BFFD5409E839058927BA739F2460F1433BAB6291F74B07853F552DA9DE6F7B92649450795D2432504B277575DC55EF124EE666B1E5B04DBE35B192F0906384EDA7C081366A268A980F47F75565A7556D77DCFA7B1602B93A33E6A9AD918EB628BC88051284222A6174683F2D')
       res.signatureValue.length.should === 256
       res.should.have.property('validSignature', false)
+      done()
+    })
+  })
+
+  // 8/8/2017 New good signature boundary
+  it('should validate signature after 8/8/2017', function (done) {
+    beacon.current(1494166740, function (err, res) {
+      if (err !== null) done(err)
+      res.should.have.property('signatureValue', '4FFD2AB40CAC8296025EC64F9BC67B8CE939A336CB311136D8979204C1EA83AE00A3EA667BC678648A46C411D62B70FF1E761FCF72D186DD3EFC5A9F0B4B458D5B133B8B84040833AA932DE51FE27507EF822D2ECD427AC87E24503D12CB8C74BAA87EAB596B66F3CA49F49B735728B1A1271C491269532DAD5D1C170371E80EAF8AC3D4637D8F11040DBFA86B5FD4010E8EBEA9286896FE2D5CFDD24E3221C8BF9EF512F8D018B769E900AA368EB68C2958A07B4515BB36DB2964A3204A8132F2D5186D7EAB6D470904A2568B1DBE5FCF98C0FEAF2F51130E6C7995FAD0E10079A973086985FDAB98B2CD9DB4E7516AF1BF1B5B8D606618D5D9B53D5B2B3266')
+      res.signatureValue.length.should === 256
+      res.should.have.property('validSignature', true)
       done()
     })
   })

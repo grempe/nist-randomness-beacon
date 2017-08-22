@@ -4,6 +4,7 @@ const request = require('request')
 const xml2js = require('xml2js')
 const crypto = require('crypto')
 const Int64BE = require('int64-buffer').Int64BE
+const fs = require('fs')
 
 // Must have trailing slash
 const BEACON_API_URI_BASE = 'https://beacon.nist.gov/rest/record/'
@@ -52,6 +53,8 @@ XmvP57a0L/E+MRBqvH2RMqwthEcjXio2WIu/lyKZmg2go9driU6H3s89X8snblDF
 a2wWIBquIAXxvD8w2Bue7pZVeUHls5V5dA==
 -----END CERTIFICATE-----
 `
+
+const BEACON_KEY = fs.readFileSync('pubkey.pem').toString()
 
 let _getBeacon = function (path, cb) {
   let options = {
@@ -145,6 +148,13 @@ function reverse (src) {
 }
 
 let isValidSignature = function (res) {
+  var currentBlockCert
+  if (res.timeStamp > 1494166740) {
+    currentBlockCert = BEACON_KEY
+  } else {
+    currentBlockCert = BEACON_CERT
+  }
+
   let verifier = crypto.createVerify('RSA-SHA512')
 
   // The hash record contains
