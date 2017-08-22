@@ -56,14 +56,14 @@ a2wWIBquIAXxvD8w2Bue7pZVeUHls5V5dA==
 
 const BEACON_KEY = fs.readFileSync('pubkey.pem').toString()
 
-let _getBeacon = function (path, cb) {
+let _getBeacon = (path, cb) => {
   let options = {
     method: 'GET',
     uri: BEACON_API_URI_BASE + path,
     gzip: true
   }
 
-  request(options, function (err, response, body) {
+  request(options, (err, response, body) => {
     if (!err && response.statusCode === 200) {
       return _parseBeaconResponse(body, cb)
     } else {
@@ -72,8 +72,8 @@ let _getBeacon = function (path, cb) {
   })
 }
 
-let _parseBeaconResponse = function (xml, cb) {
-  xml2js.parseString(xml, function (err, parsed) {
+let _parseBeaconResponse = (xml, cb) => {
+  xml2js.parseString(xml, (err, parsed) => {
     if (err) {
       return cb('XML Parsing Error')
     }
@@ -136,7 +136,7 @@ let _parseBeaconResponse = function (xml, cb) {
   })
 }
 
-function reverse (src) {
+let reverse = (src) => {
   let buffer = new Buffer(src.length)
 
   for (let i = 0, j = src.length - 1; i <= j; ++i, --j) {
@@ -147,7 +147,7 @@ function reverse (src) {
   return buffer
 }
 
-let isValidSignature = function (res) {
+let isValidSignature = (res) => {
   var currentBlockCert
   if (res.timeStamp > 1494166740) {
     currentBlockCert = BEACON_KEY
@@ -188,7 +188,7 @@ let isValidSignature = function (res) {
   return res.outputValue.toLowerCase() === hash.digest('hex')
 }
 
-let isValidTimestamp = function (timestamp) {
+let isValidTimestamp = (timestamp) => {
   // Must be an Integer
   if (!timestamp === parseInt(timestamp, 10)) {
     return false
@@ -209,7 +209,7 @@ let isValidTimestamp = function (timestamp) {
 
 // Given a number of minutes, return a valid
 // epoch timestamp (in seconds)
-exports.timestampInSecondsMinutesAgo = function (min) {
+exports.timestampInSecondsMinutesAgo = (min) => {
   // Must be an Integer
   if (!min === parseInt(min, 10)) {
     return null
@@ -223,37 +223,37 @@ exports.timestampInSecondsMinutesAgo = function (min) {
 
 // Return a valid epoch timestamp for the current
 // time (in seconds)
-exports.currentTimestampInSeconds = function () {
+exports.currentTimestampInSeconds = () => {
   let d = new Date()
   return Math.round(d.getTime() / 1000)
 }
 
-exports.current = function (timestamp, cb) {
+exports.current = (timestamp, cb) => {
   if (!isValidTimestamp(timestamp)) {
     return cb('Invalid timestamp')
   }
   _getBeacon(timestamp, cb)
 }
 
-exports.previous = function (timestamp, cb) {
+exports.previous = (timestamp, cb) => {
   if (!isValidTimestamp(timestamp)) {
     return cb('Invalid timestamp')
   }
   _getBeacon('/previous/' + timestamp, cb)
 }
 
-exports.next = function (timestamp, cb) {
+exports.next = (timestamp, cb) => {
   if (!isValidTimestamp(timestamp)) {
     return cb('Invalid timestamp')
   }
   _getBeacon('/next/' + timestamp, cb)
 }
 
-exports.last = function (cb) {
+exports.last = (cb) => {
   _getBeacon('/last', cb)
 }
 
-exports.startChain = function (timestamp, cb) {
+exports.startChain = (timestamp, cb) => {
   if (!isValidTimestamp(timestamp)) {
     return cb('Invalid timestamp')
   }
