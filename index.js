@@ -4,6 +4,7 @@ const request = require('request')
 const xml2js = require('xml2js')
 const crypto = require('crypto')
 const Int64BE = require('int64-buffer').Int64BE
+const path = require('path')
 const fs = require('fs')
 
 // Must have trailing slash
@@ -54,7 +55,8 @@ a2wWIBquIAXxvD8w2Bue7pZVeUHls5V5dA==
 -----END CERTIFICATE-----
 `
 
-const BEACON_KEY = fs.readFileSync('pubkey.pem').toString()
+const vendor = path.dirname(fs.realpathSync(__filename))
+const BEACON_KEY = fs.readFileSync(vendor + '/pubkey.pem').toString()
 
 let _getBeacon = (path, cb) => {
   let options = {
