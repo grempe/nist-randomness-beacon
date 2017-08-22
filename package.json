@@ -23,11 +23,12 @@
     "hash",
     "beacon"
   ],
-  "version": "1.2.0",
+  "version": "1.2.1",
   "repository": {
     "url": "https://github.com/grempe/nist-randomness-beacon"
   },
   "main": "index.js",
+  "files" : [ "pubkey.pem" ],
   "dependencies": {
     "int64-buffer": "^0.1.9",
     "request": "^2.81.0",
