@@ -1,0 +1,46 @@
+# Provided by Rene Peralta
+# this shell script verifies a NIST Beacon pulse, call is sh verify_f <POSIX time>
+# e.g. sh verify_f 1495771320
+
+function verify()
+{
+  t=$1
+  curl -s https://beacon.nist.gov/rest/record/$t -o rec.xml
+
+  xpath rec.xml '/record/version/text()' > beacon.bin 2>/dev/null
+  printf "%.8x" `xpath rec.xml '/record/frequency/text()' 2>/dev/null` | xxd -r -p -g0 >> beacon.bin
+  printf "%.16x" `xpath rec.xml '/record/timeStamp/text()' 2>/dev/null` | xxd -r -p -g0 >> beacon.bin
+  xpath rec.xml '/record/seedValue/text()' 2>/dev/null | xxd -r -p -g0 >> beacon.bin 
+  xpath rec.xml '/record/previousOutputValue/text()' 2>/dev/null | xxd -r -p -g0 >> beacon.bin
+
+  printf "%.8x" `xpath rec.xml '/record/statusCode/text()' 2>/dev/null` | xxd -r -p -g0 >> beacon.bin
+ 
+  signature=`xpath rec.xml '/record/signatureValue/text()' rec.xml 2>/dev/null`
+  len=${#signature}
+  for((i=${len}-2; i>=0; i=i-2)); do rev="$rev${signature:$i:2}"; done
+  echo ${rev} | xxd -r -p -g0 > beacon.sig
+
+  #/usr/bin/openssl x509 -pubkey -noout -in beacon.cer  > beaconpubkey.pem
+
+  /usr/bin/openssl dgst -sha512 -verify pubkey.pem -signature beacon.sig beacon.bin  > ver.out
+
+  input="/Users/glenn/src/grempe/nist-randomness-beacon/ver.out"
+  while IFS= read -r var
+  do
+	  if [ "$var" = "Verification Failure" ]
+	  then
+      echo "$t : Bad signature." 
+      echo "$t : BAD" > status_file
+    else 
+      echo "$t : signature is good."
+	  fi
+  done < "$input"
+  rm rec.xml
+  rm beacon.bin
+  rm beacon.sig
+#  rm beaconpubkey.pem
+  rm ver.out
+}
+
+verify $1
+
