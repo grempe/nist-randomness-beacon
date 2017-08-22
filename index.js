@@ -148,15 +148,6 @@ let reverse = (src) => {
 }
 
 let isValidSignature = (res) => {
-  var currentBlockCert
-  if (res.timeStamp > 1494166740) {
-    currentBlockCert = BEACON_KEY
-  } else {
-    currentBlockCert = BEACON_CERT
-  }
-
-  let verifier = crypto.createVerify('RSA-SHA512')
-
   // The hash record contains
   //   Version number (ascii text)
   //   Update frequency (4 bytes)
@@ -164,22 +155,41 @@ let isValidSignature = (res) => {
   //   The HW RNG seedValue (64 bytes)
   //   The previous output value, does the chaining (64 bytes)
   //   Status code (4 bytes)
+  let certVerifier = crypto.createVerify('RSA-SHA512')
   let buf4 = new Buffer(4)
-  verifier.update(res.version, 'ascii')
+  certVerifier.update(res.version, 'ascii')
   buf4.writeIntBE(res.frequency, 0, 4)
-  verifier.update(buf4)
-  verifier.update(new Int64BE(res.timeStamp).toBuffer())
-  verifier.update(new Buffer(res.seedValue, 'hex'))
-  verifier.update(new Buffer(res.previousOutputValue, 'hex'))
+  certVerifier.update(buf4)
+  certVerifier.update(new Int64BE(res.timeStamp).toBuffer())
+  certVerifier.update(new Buffer(res.seedValue, 'hex'))
+  certVerifier.update(new Buffer(res.previousOutputValue, 'hex'))
   buf4.writeIntBE(res.statusCode, 0, 4)
-  verifier.update(buf4)
+  certVerifier.update(buf4)
+
+  // duplicate this verifier since crypto.createVerify()
+  // does not allow itself to be called twice.
+  let keyVerifier = crypto.createVerify('RSA-SHA512')
+  keyVerifier.update(res.version, 'ascii')
+  buf4.writeIntBE(res.frequency, 0, 4)
+  keyVerifier.update(buf4)
+  keyVerifier.update(new Int64BE(res.timeStamp).toBuffer())
+  keyVerifier.update(new Buffer(res.seedValue, 'hex'))
+  keyVerifier.update(new Buffer(res.previousOutputValue, 'hex'))
+  buf4.writeIntBE(res.statusCode, 0, 4)
+  keyVerifier.update(buf4)
 
   // Create a bytewise reversed version of the signature.
   // This is necessary because Beacon signs with Microsoft CryptoAPI which outputs
   // the signature as little-endian instead of big-endian
   let signature = new Buffer(res.signatureValue, 'hex')
-  if (!verifier.verify(BEACON_CERT, reverse(signature))) {
-    return false
+  let revSignature = reverse(signature)
+
+  // Auto-fallback from the pubkey that is used starting 8/8/2017
+  // to the original x509 cert used prior to that.
+  if (!keyVerifier.verify(BEACON_KEY, revSignature)) {
+    if (!certVerifier.verify(BEACON_CERT, revSignature)) {
+      return false
+    }
   }
 
   // The output value is the SHA-512 hash of the signature
