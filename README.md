@@ -15,10 +15,12 @@ There are many uses for these random values. However, DO NOT use these
 random values as cryptographic key material! They are public and
 explicitly not intended for that use. You have been warned!!!
 
-Please also note that there is currently an issue with invalid signatures
+Please also note that there is currently an issue with signatures
 on NIST Beacon blocks after `1493245860`. More details on this can be found
 on the [NIST Beacon homepage](https://beacon.nist.gov/home), and in 
-[this Github issue](https://github.com/urda/nistbeacon/issues/26).
+[this Github issue](https://github.com/urda/nistbeacon/issues/26). This has
+been worked around in the current version by performing an auto-fallback
+to the old x509 cert if the most current pubkey.pem file does not verify.
 
 ## Features
 
