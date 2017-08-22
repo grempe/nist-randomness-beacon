@@ -173,7 +173,7 @@ let isValidSignature = function (res) {
   }
 
   // The output value is the SHA-512 hash of the signature
-  let hash = crypto.createHash('RSA-SHA512')
+  let hash = crypto.createHash('sha512')
   hash.update(signature)
   return res.outputValue.toLowerCase() === hash.digest('hex')
 }
