@@ -163,8 +163,8 @@ let isValidSignature = (res) => {
   buf4.writeIntBE(res.frequency, 0, 4)
   certVerifier.update(buf4)
   certVerifier.update(new Int64BE(res.timeStamp).toBuffer())
-  certVerifier.update(new Buffer(res.seedValue, 'hex'))
-  certVerifier.update(new Buffer(res.previousOutputValue, 'hex'))
+  certVerifier.update(Buffer.from(res.seedValue, 'hex'))
+  certVerifier.update(Buffer.from(res.previousOutputValue, 'hex'))
   buf4.writeIntBE(res.statusCode, 0, 4)
   certVerifier.update(buf4)
 
@@ -175,15 +175,15 @@ let isValidSignature = (res) => {
   buf4.writeIntBE(res.frequency, 0, 4)
   keyVerifier.update(buf4)
   keyVerifier.update(new Int64BE(res.timeStamp).toBuffer())
-  keyVerifier.update(new Buffer(res.seedValue, 'hex'))
-  keyVerifier.update(new Buffer(res.previousOutputValue, 'hex'))
+  keyVerifier.update(Buffer.from(res.seedValue, 'hex'))
+  keyVerifier.update(Buffer.from(res.previousOutputValue, 'hex'))
   buf4.writeIntBE(res.statusCode, 0, 4)
   keyVerifier.update(buf4)
 
   // Create a bytewise reversed version of the signature.
   // This is necessary because Beacon signs with Microsoft CryptoAPI which outputs
   // the signature as little-endian instead of big-endian
-  let signature = new Buffer(res.signatureValue, 'hex')
+  let signature = Buffer.from(res.signatureValue, 'hex')
   let revSignature = reverse(signature)
 
   // Auto-fallback from the pubkey that is used starting 8/8/2017
