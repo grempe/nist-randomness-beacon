@@ -1,5 +1,3 @@
-'use strict'
-
 const request = require('request')
 const xml2js = require('xml2js')
 const crypto = require('crypto')
@@ -80,18 +78,19 @@ let _parseBeaconResponse = (xml, cb) => {
       return cb('XML Parsing Error')
     }
 
-    if (!parsed ||
-        !parsed.record ||
-        !parsed.record.version ||
-        !parsed.record.frequency ||
-        !parsed.record.timeStamp ||
-        !parsed.record.seedValue ||
-        !parsed.record.previousOutputValue ||
-        !parsed.record.signatureValue ||
-        !parsed.record.outputValue ||
-        !parsed.record.statusCode ||
-        !parsed.record.outputValue
-        ) {
+    if (
+      !parsed ||
+      !parsed.record ||
+      !parsed.record.version ||
+      !parsed.record.frequency ||
+      !parsed.record.timeStamp ||
+      !parsed.record.seedValue ||
+      !parsed.record.previousOutputValue ||
+      !parsed.record.signatureValue ||
+      !parsed.record.outputValue ||
+      !parsed.record.statusCode ||
+      !parsed.record.outputValue
+    ) {
       return cb('Missing attributes in server response')
     }
 
@@ -138,7 +137,7 @@ let _parseBeaconResponse = (xml, cb) => {
   })
 }
 
-let reverse = (src) => {
+let reverse = src => {
   let buffer = new Buffer(src.length)
 
   for (let i = 0, j = src.length - 1; i <= j; ++i, --j) {
@@ -149,7 +148,7 @@ let reverse = (src) => {
   return buffer
 }
 
-let isValidSignature = (res) => {
+let isValidSignature = res => {
   // The hash record contains
   //   Version number (ascii text)
   //   Update frequency (4 bytes)
@@ -200,7 +199,7 @@ let isValidSignature = (res) => {
   return res.outputValue.toLowerCase() === hash.digest('hex')
 }
 
-let isValidTimestamp = (timestamp) => {
+let isValidTimestamp = timestamp => {
   // Must be an Integer
   if (!timestamp === parseInt(timestamp, 10)) {
     return false
@@ -221,7 +220,7 @@ let isValidTimestamp = (timestamp) => {
 
 // Given a number of minutes, return a valid
 // epoch timestamp (in seconds)
-exports.timestampInSecondsMinutesAgo = (min) => {
+exports.timestampInSecondsMinutesAgo = min => {
   // Must be an Integer
   if (!min === parseInt(min, 10)) {
     return null
@@ -261,7 +260,7 @@ exports.next = (timestamp, cb) => {
   _getBeacon('/next/' + timestamp, cb)
 }
 
-exports.last = (cb) => {
+exports.last = cb => {
   _getBeacon('/last', cb)
 }
 

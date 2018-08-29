@@ -2,7 +2,7 @@ var beacon = require('../index.js')
 
 let ts = beacon.timestampInSecondsMinutesAgo(10)
 
-beacon.current(ts, function (err, res) {
+beacon.current(ts, function(err, res) {
   if (err) {
     console.log(err)
   } else {
@@ -10,7 +10,7 @@ beacon.current(ts, function (err, res) {
   }
 })
 
-beacon.previous(ts, function (err, res) {
+beacon.previous(ts, function(err, res) {
   if (err) {
     console.log(err)
   } else {
@@ -18,7 +18,7 @@ beacon.previous(ts, function (err, res) {
   }
 })
 
-beacon.next(ts, function (err, res) {
+beacon.next(ts, function(err, res) {
   if (err) {
     console.log(err)
   } else {
@@ -26,7 +26,7 @@ beacon.next(ts, function (err, res) {
   }
 })
 
-beacon.last(function (err, res) {
+beacon.last(function(err, res) {
   if (err) {
     console.log(err)
   } else {
@@ -34,7 +34,7 @@ beacon.last(function (err, res) {
   }
 })
 
-beacon.startChain(ts, function (err, res) {
+beacon.startChain(ts, function(err, res) {
   if (err) {
     console.log(err)
   } else {
