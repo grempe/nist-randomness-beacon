@@ -6,6 +6,10 @@
       "url": "https://www.rempe.us/"
     },
     {
+      "name": "Jason Bukowski",
+      "email": "jbukowski@gmail.com"
+    },
+    {
       "name": "Richard Schneider",
       "email": "makaretu@gmail.com"
     },
@@ -23,20 +27,22 @@
     "hash",
     "beacon"
   ],
-  "version": "1.2.2",
+  "version": "2.0.0",
   "repository": {
     "url": "https://github.com/grempe/nist-randomness-beacon"
   },
   "main": "index.js",
-  "files" : [ "pubkey.pem" ],
+  "files": [
+    "pubkey.pem"
+  ],
   "dependencies": {
-    "int64-buffer": "^0.1.9",
-    "request": "^2.81.0",
-    "xml2js": "~0.4.17"
+    "int64-buffer": "^0.1.10",
+    "request": "^2.88.0",
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {
-    "mocha": "^3.5.0",
-    "should": "^11.2.1"
+    "mocha": "^5.2.0",
+    "should": "^13.2.3"
   },
   "scripts": {
     "test": "node_modules/.bin/mocha",
