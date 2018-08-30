@@ -256,7 +256,7 @@ async function _validateSignatureAsync(pulse) {
 
 function _isValidTimestamp(timestamp) {
   // Must be an Integer
-  if (!timestamp === parseInt(timestamp, 10)) {
+  if (timestamp !== parseInt(timestamp, 10)) {
     return false
   }
 
@@ -317,7 +317,7 @@ async function getPulseByChainAndPulseIndexAsync(chainIndex, pulseIndex) {
 async function getCertificateByIdAsync(certificateId) {
   let result = await _getBeaconAsync(`certificate/${certificateId}`, false)
   // ensure a line break after -----BEGIN CERTIFICATE----- (NIST results lack one)
-  return `${result.slice(0, 27)}\n${result.slice(27)}`
+  return `${result.slice(0, 27)}\r\n${result.slice(27)}`
 }
 
 module.exports = {

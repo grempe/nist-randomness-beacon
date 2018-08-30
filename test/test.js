@@ -1,200 +1,560 @@
 /* global describe, it */
 
 const beacon = require('../index')
+const testTimestamp = 1535650993225
 
-describe('beacon.current', function() {
-  it('should return all expected values for a specific timestamp', function(done) {
-    beacon.current(1493245860, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property('version', 'Version 1.0')
-      res.should.have.property('frequency', 60)
-      res.should.have.property('timeStamp', 1493245860)
-      res.should.have.property('timeStampISO8601', '2017-04-26T22:31:00.000Z')
-      res.should.have.property(
-        'seedValue',
-        '5367784CAC9A9D65264256A15BD3373F7C1982FFEB42B3B5427E3F5E358765E9E2474D6DCB0FC552DD3F4CF8AC3D169E1F31C12CCACD4765BCAE8AFDFC7448B9'
-      )
-      res.should.have.property(
-        'previousOutputValue',
-        'ABE8C2106EEE15255A43C752CBE33C833B16D7120CAED143D1005275DDD1E5F4E16F0B1DEB1A02D4169D8B116D8A66C6AB7A788607D343D9B7164069B5DE07D2'
-      )
-      res.should.have.property(
-        'signatureValue',
-        '07DF220FC6D4768EBE41B66535F72CAD7BDAFFB9B871F64BCBB817D2FC43E8DC49F60D79BDEA3D9F39F80DA57B23E246806C4ECBA5FE76DE4EAA3E1F06B328FD34AA3369367CFAA5046C793E633C12B37C9834FDDB181BFCE252C130817991987669175E6E331179ABDB3264A6EF6A3145860B35257F49E244F18F6D9371935BB812B503FBE9A73FAE852514D396877817C9592535FAF42D596BF339AFD37263DA1C8E3DCEDE5C8D13C68EC2CB455E4ABF3C4E8769D44801B167362ACFE3117584DE3B23AA558F22D1358BAE7BA3CC2B73DFB3457DBCF66DBB9898880FC5AF906EA7E595FAC1E5F359A731935735E52F36186DACA904819D0C217351B8A97681'
-      )
-      res.should.have.property(
-        'outputValue',
-        '46D88151C915BD3DD65F0401BB7775D55AB0731170262084A20030C00C0A66D8DAA693E49DCE61F86C7AD176CC0EBEB1338ED0DA6A69994711C39718C98C4BDF'
-      )
-      res.should.have.property('statusCode', 0)
-      res.should.have.property('validSignature', true)
-      done()
-    })
-  })
+describe('getCertificateByIdAsync', function() {
+  it('should return the expected value', function() {
+    let certId =
+      '5501e3d72bc42f3b96e16de4dcadcb16768e109662bd16d667d5fd9aee585af31bbdc5dd4f53592276064b53dddd76c8f3604b2a41db6e09f78f82bb5d6569e7'
+    let expectedValue =
+      '-----BEGIN CERTIFICATE-----\r\n' +
+      'MIIHWzCCBkOgAwIBAgIQCrOnD+Dvk39rGwz3xX6StTANBgkqhkiG9w0BAQsFADBE\r\n' +
+      'MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMR4wHAYDVQQDExVE\r\n' +
+      'aWdpQ2VydCBHbG9iYWwgQ0EgRzIwHhcNMTgwMTEwMDAwMDAwWhcNMTkwMTExMTIw\r\n' +
+      'MDAwWjCBozELMAkGA1UEBhMCVVMxETAPBgNVBAgTCE1hcnlsYW5kMRUwEwYDVQQH\r\n' +
+      'EwxHYWl0aGVyc2J1cmcxNzA1BgNVBAoTLk5hdGlvbmFsIEluc3RpdHV0ZSBvZiBT\r\n' +
+      'dGFuZGFyZHMgYW5kIFRlY2hub2xvZ3kxEDAOBgNVBAsTB0lUTC9DU0QxHzAdBgNV\r\n' +
+      'BAMTFmVuZ2luZS5iZWFjb24ubmlzdC5nb3YwggIiMA0GCSqGSIb3DQEBAQUAA4IC\r\n' +
+      'DwAwggIKAoICAQDqdbhEDfBOCzCjW6cKBSKkkl8pc7v6VDDI21VAs5fOyZRoSwfW\r\n' +
+      'tHc9YkVoYBaNTfmUBW5Q8hWbk65VftCznjEFIa05ldME/ABGKSkQKFyC3ELsE4+e\r\n' +
+      'nkM1I9EJOt9dCSH9dSmzwjFf8C/fxhGqYEatH8GenuQ/FbU7shiigiqHUJU9SSVZ\r\n' +
+      'trH4qV7szmcIBd/VzVTgLFipF8nl6EoScEIdgOC+ZmRo0LLfB/ulUT7iaXuzB0GP\r\n' +
+      'ocMjwk4yfJgHNkHitgGMoDNYGVz4sU0QCtQSAXjjvwAMb+EzGBV08Zj2qNMEANKX\r\n' +
+      'cvdRRA340t3oC6PbmeW+7w+IRo0to8AqhUlSAobmty6pOUzykEdhg/g6FKOowQEz\r\n' +
+      'JZkhHd1/7Fh7XRHvc6EKz5tjAP+c5MUP9ni6O2N6uzrNbm94p0JmGk6DwJVWS0A1\r\n' +
+      'l7M/xjON3aZN2f2ZSlezurBh9GBWENniHUsG/iOJdtjb+VE8VCr+J3Ltn62CfbgU\r\n' +
+      '4aW+XbwHtZq+jtLzf2VKgHpeM4LKCzgQbhSbJNuuNCm2ib8PaS/f+kz+p9D8Rd/q\r\n' +
+      'Te4/w03a+bqZRBcql8K7n73ysT+r595oos6AQujj4rgOHU7byZDLRGbMHPhox4OD\r\n' +
+      'Dd7iYGhMHcfUez7FYJF0zNQafEt7iZP6U/PigtPoi3lJNPLcijbNcFNSowIDAQAB\r\n' +
+      'o4IC5zCCAuMwHwYDVR0jBBgwFoAUJG4rLdBqklFRJWkBqppHponnQCAwHQYDVR0O\r\n' +
+      'BBYEFB69FZvO+nhCyDuDd1uLZchw4+j3MCEGA1UdEQQaMBiCFmVuZ2luZS5iZWFj\r\n' +
+      'b24ubmlzdC5nb3YwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMB\r\n' +
+      'BggrBgEFBQcDAjB3BgNVHR8EcDBuMDWgM6Axhi9odHRwOi8vY3JsMy5kaWdpY2Vy\r\n' +
+      'dC5jb20vRGlnaUNlcnRHbG9iYWxDQUcyLmNybDA1oDOgMYYvaHR0cDovL2NybDQu\r\n' +
+      'ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0R2xvYmFsQ0FHMi5jcmwwTAYDVR0gBEUwQzA3\r\n' +
+      'BglghkgBhv1sAQEwKjAoBggrBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQu\r\n' +
+      'Y29tL0NQUzAIBgZngQwBAgIwdAYIKwYBBQUHAQEEaDBmMCQGCCsGAQUFBzABhhho\r\n' +
+      'dHRwOi8vb2NzcC5kaWdpY2VydC5jb20wPgYIKwYBBQUHMAKGMmh0dHA6Ly9jYWNl\r\n' +
+      'cnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEdsb2JhbENBRzIuY3J0MAkGA1UdEwQC\r\n' +
+      'MAAwggEFBgorBgEEAdZ5AgQCBIH2BIHzAPEAdgC72d+8H4pxtZOUI5eqkntHOFeV\r\n' +
+      'CqtS6BqQlmQ2jh7RhQAAAWDgpJnPAAAEAwBHMEUCIQC1eW0bNSeOZNYU8Of5/oZr\r\n' +
+      'fruiiiIYK/QKct/hCsXgdwIgS5/nMOviHGu2/FLTMkWFAva+wBVGNrsRdbD6yLoQ\r\n' +
+      'BNgAdwCHdb/nWXz4jEOZX73zbv9WjUdWNv9KtWDBtOr/XqCDDwAAAWDgpJm5AAAE\r\n' +
+      'AwBIMEYCIQCq1AvkODGe/zTX56kishId42HRCiEDa1/Wq8F9/DOabwIhAI5UbEeE\r\n' +
+      'Q20nuadFVxpJgirXFYpAzjlr6/emIXRc5E1LMA0GCSqGSIb3DQEBCwUAA4IBAQAs\r\n' +
+      'WjP0Sj4r2nHWLKi45aUwhS+WZzq3cDPa92QDP6LnFTtzUicPpOyLYcWOsc7SKyGi\r\n' +
+      'BlWgxHp9vmoO+25gCXSbet42Yl1PXFhTpZcPHPxO/BknRGe9CY1pmOOyjsxwMZ8a\r\n' +
+      'qH2He7anCpHk5AEfLX0F+WHjEtnYBrRhMM6GtftHXXxuAhGuH0zmzbwakREOoWNO\r\n' +
+      'Q2iTFVBb9UybxHbl9r0rVD3x5FpRrTf90l5dhrERzhtjone/DtQU/5wRagRTKjeQ\r\n' +
+      'VaCu59An0vNCJYVWPbOypZCRdbcKlcd3GoMx2DosfFcdgSLR1h9+O0y3DsonJgiT\r\n' +
+      'Q2l+vxzeaIsZqUEYrLaq\r\n' +
+      '-----END CERTIFICATE-----'
 
-  // Handle NIST Signature Issues Gracefully
-  // See : https://github.com/urda/nistbeacon/issues/26
-
-  // Good signature boundary
-  it('should validate signature with last known good timestamp', function(done) {
-    beacon.current(1495837080, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property(
-        'signatureValue',
-        '4E492DD12EF7D10867F2BBECDD783B3143FB284E71B43C255939ACF0C1897BCAC01A7140564D97572479EADEF958595A4B253948475FC941B9A22CE22287404E79F72B3BFE6332688F3E403E6A8941ECF019962CBB8C5D6235DD26029C4FCD4C0936EEA7CBF521F2DE114054323D1A07740EF207C422C8F44FA0978572A8E396BF8037CDA6A83FFEE7FA04E114F14EFFEC9DCD3B4918520976F707E8EA318D18988CBF9C8890F3F33624673F357A666270336B47420AB69BC8E9F86694AB34834099C5D1BD8C71D4390869AF4275E3CAC95618FDBC1A6238FD34CCFA6A132582E531219904ED34214059043D100595B5DF1844FB1D1D7D6F214EFDF391308657'
-      )
-      res.signatureValue.length.should === 512
-      res.should.have.property('validSignature', true)
-      done()
-    })
-  })
-
-  // Broken signature boundary
-  it('should not validate signature during the broken cert period', function(done) {
-    beacon.current(1496176860, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property(
-        'signatureValue',
-        '77555F6F9AD9F835DAA52A333DC4EF6814329D48BFFD5409E839058927BA739F2460F1433BAB6291F74B07853F552DA9DE6F7B92649450795D2432504B277575DC55EF124EE666B1E5B04DBE35B192F0906384EDA7C081366A268A980F47F75565A7556D77DCFA7B1602B93A33E6A9AD918EB628BC88051284222A6174683F2D'
-      )
-      res.signatureValue.length.should === 256
-      res.should.have.property('validSignature', false)
-      done()
-    })
-  })
-
-  // 8/8/2017 New good signature boundary
-  it('should validate signature after 8/8/2017 using new pubkey.pem', function(done) {
-    beacon.current(1494166740, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property(
-        'signatureValue',
-        '4FFD2AB40CAC8296025EC64F9BC67B8CE939A336CB311136D8979204C1EA83AE00A3EA667BC678648A46C411D62B70FF1E761FCF72D186DD3EFC5A9F0B4B458D5B133B8B84040833AA932DE51FE27507EF822D2ECD427AC87E24503D12CB8C74BAA87EAB596B66F3CA49F49B735728B1A1271C491269532DAD5D1C170371E80EAF8AC3D4637D8F11040DBFA86B5FD4010E8EBEA9286896FE2D5CFDD24E3221C8BF9EF512F8D018B769E900AA368EB68C2958A07B4515BB36DB2964A3204A8132F2D5186D7EAB6D470904A2568B1DBE5FCF98C0FEAF2F51130E6C7995FAD0E10079A973086985FDAB98B2CD9DB4E7516AF1BF1B5B8D606618D5D9B53D5B2B3266'
-      )
-      res.signatureValue.length.should === 256
-      res.should.have.property('validSignature', true)
-      done()
-    })
-  })
-
-  // 8/21/2017 Current
-  it('should validate signature weeks after 8/8/2017 using new pubkey.pem', function(done) {
-    beacon.current(1503384720, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property(
-        'signatureValue',
-        '971D1E2FE862F88D5FA67A2AAA841723B02EF1A1EE4970EE5C210ACE98F7EC7182BAC67AE25FDA4D4E1C4B0732439A7D5819A7E1C49E6C3C4B2CCD5470939335271AFD4C97E3AF7CFBEB0EA9EB423AC9F6B2DFD8226013FB43035B25056ED7FD4ABC7FD81DCDC3FFF457FA60503001EC6F1241C446BEE8ABEC1E2CC81D8E17E4F1B2352ECFB1146C2D91E8D87F5074132CC80987B5EF1578D06AFCE8295760CFD1325FE052B03CF2B05F8C850006F960D8C15E04AB848034428700CDED364F67B8E1827B1E42EB480C201CB8C70B1D13D7ED26D4FC4F4D792516FAD5D7116C8022A8E79379ACBE790CDA0F1ED0717B2757EEA483E844A6FFA7D600BA0F3DD236'
-      )
-      res.signatureValue.length.should === 256
-      res.should.have.property('validSignature', true)
-      done()
+    return new Promise(async (resolve, reject) => {
+      try {
+        let cert = await beacon.getCertificateByIdAsync(certId)
+        cert.should.equal(expectedValue)
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
     })
   })
 })
 
-describe('beacon.previous', function() {
-  it('should return all expected values for a specific previous pulse', function(done) {
-    beacon.previous(1494166740, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property('version', 'Version 1.0')
-      res.should.have.property('frequency', 60)
-      res.should.have.property('timeStamp', 1494166680)
-      res.should.have.property('timeStampISO8601', '2017-05-07T14:18:00.000Z')
-      res.should.have.property(
-        'seedValue',
-        '6FADA8886A8849D07F7B0EEAD52141FFE4663852884BC4B61D31C901F17B04FD17453CEE23E32D2670D946A10434E4BA6C6D060C7F7BAE35A0F9A8B629F40DED'
-      )
-      res.should.have.property(
-        'previousOutputValue',
-        '75C85E3EAD2C5F813C596A9EFD9AE4B4D87762C0E707C85293E433B81D20AD92CB7260BCC7E5F0AACE79DC0DBF7C2580D994D861CA5D3236D07503E3AC6E1EB6'
-      )
-      res.should.have.property(
-        'signatureValue',
-        '2FFD3734F3A511BC921828F5A32F04C526BDEAA44B6B2342EE0D77E5335407CEB4305EF686F6A99362E13BFA2DF1C3604BFBA4C45CDE5FD9F33E4C4636246DF3DFDA729DB77229D97ABB9526C58D9A1F00C0C849564B2366451F3AB0571A36BBFBB61CD1FD089BEB520A01E6FA40EF0A5401BBC48FA0669535986436B2EA11BE23230225CE229710C4B57D041B18E5215058D97B23C04D035FB7F89EC3BBE08BF702276E9E20983B6E5AEAABAB793A700968D9031CA4C0CDFDF5BC0805F6C385442573B716F6C21E6B7E40C1A4E683FFF2F4FDE9D31FAEE0796790504A72BE85CD8E4FE6A7E3FBB6423D74E3315B607A7210C4BA5ADC7D12A9E10C787A491054'
-      )
-      res.should.have.property(
-        'outputValue',
-        '29DA3AC0491B296FDCD7FB5433ECEBCF965EA10207D7A33476B1845CE05F8305F23BD38508D59F04C54A1972635A726072CC2E48DF6260951D314388FEEAB088'
-      )
-      res.should.have.property('statusCode', 0)
-      res.should.have.property('validSignature', true)
-      done()
+describe('getClosestPulseAsync', function() {
+  it('should throw the proper error with a bad timestamp', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await beacon.getClosestPulseAsync('bad')
+        reject('no error thrown')
+      } catch (error) {
+        error.should.have.property('message', 'Invalid timestamp')
+        resolve()
+      }
+    })
+  })
+  it('should return the expected value for the testTimestamp', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let res = await beacon.getClosestPulseAsync(testTimestamp)
+        res.should.have.property('pulse')
+        res.pulse.should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54610'
+        )
+        res.pulse.should.have.property('version', 'Version 2.0')
+        res.pulse.should.have.property('cipherSuite', 0)
+        res.pulse.should.have.property('period', 60000)
+        res.pulse.should.have.property(
+          'certificateId',
+          '5501e3d72bc42f3b96e16de4dcadcb16768e109662bd16d667d5fd9aee585af31bbdc5dd4f53592276064b53dddd76c8f3604b2a41db6e09f78f82bb5d6569e7'
+        )
+        res.pulse.should.have.property('chainIndex', 1)
+        res.pulse.should.have.property('pulseIndex', 54610)
+        res.pulse.should.have.property('timeStamp', '2018-08-30T17:44:00.000Z')
+        res.pulse.should.have.property(
+          'localRandomValue',
+          'F6F8318BED4A7236330C81E948ACF4DBAFD7F3597A66683C95C731B391098823FE489358B5255FFC6FC429884F5749BEF296D1AD5D84B3DD96BAAA12FEDEC005'
+        )
+        res.pulse.should.have.property('external')
+        res.pulse.external.should.have.property(
+          'sourceId',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.external.should.have.property('statusCode', 0)
+        res.pulse.external.should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.should.have.property('listValues')
+        res.pulse.listValues.should.be.instanceof(Array).and.have.lengthOf(5)
+        res.pulse.listValues[0].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54609'
+        )
+        res.pulse.listValues[0].should.have.property('type', 'previous')
+        res.pulse.listValues[0].should.have.property(
+          'value',
+          '20695B01257C5009EAB6CF7BF1F286EE7D825AC7B22E9F16AFCEE4F913BBCF4B707098DE4CBBD6788C9DC98F917E8C5B0F21EC926F348E2399C6459B57C6A4DA'
+        )
+        res.pulse.listValues[1].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54566'
+        )
+        res.pulse.listValues[1].should.have.property('type', 'hour')
+        res.pulse.listValues[1].should.have.property(
+          'value',
+          '3935CB5E44B1AD0F3DE24694CFCC981B22B3521D9A31EA62B24E14853B9B7ACA5FBF548C0F54404A94ECE99739DCED1021AE830F08BF26B0B76399D75673926B'
+        )
+        res.pulse.listValues[2].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/53546'
+        )
+        res.pulse.listValues[2].should.have.property('type', 'day')
+        res.pulse.listValues[2].should.have.property(
+          'value',
+          'F31907264F879C932A17547CCB2285540BA8DB9D5E797C9A047AD7FCA418C1BDFA679D3475EB6BB558285B166B661CEA0FFED8611B832C14B91264A914A2990D'
+        )
+        res.pulse.listValues[3].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/11793'
+        )
+        res.pulse.listValues[3].should.have.property('type', 'month')
+        res.pulse.listValues[3].should.have.property(
+          'value',
+          '6774C12709D6514ABBC4B96D8A7AD5E73C5C68986B976A17ED4191452AF5098B1C390D6893D253DDA3C52B49BEFA4BB3E666F37EF6420F96974CAA1AF92FF5D7'
+        )
+        res.pulse.listValues[4].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/1'
+        )
+        res.pulse.listValues[4].should.have.property('type', 'year')
+        res.pulse.listValues[4].should.have.property(
+          'value',
+          '7665F054F21B50DF62CD3E50AF8EB783E30D271B091DE051212D301E0E3D17FFCF0367DB41CFFD3C51E88BDE0B0621F49EB03435BC373D5D49480941A8B3547E'
+        )
+        res.pulse.should.have.property(
+          'precommitmentValue',
+          'AF8C7965FBC15ED1F0F4C18659723D53E2648B1E6D152A3101798E59640CA59A8C83515A31E9AAEE0E942B276120AE500D0898C1FED272339BA847C7E0629049'
+        )
+        res.pulse.should.have.property('statusCode', 0)
+        res.pulse.should.have.property(
+          'signatureValue',
+          '6C0BC22FB1C3422F0CDE311576A4B2C320E9E166E8FA0A729F451DD0D8A09D888FDAB1E84E8E68A4882F49E034AA8870B2EEFEC4B20C906B7D0F24D084D89136C89837116D7BFD33B5C45CAD96D38CEC76C05EBC764D92794353D376AC03B84E3FA837D02B6CD58283C16D2281867B3C045162C76527B9AC8958AE99582ADD6919C167446EEB254856AC6FF394A9865BB5E7552FF800907AFD29588EB475DF0CE515EE2A997C9289E8BDFD5CD8723F314F46B8C76ACBE2E951C764D48FDC99C9A07DB5EE8C75D076291B6BEA0A1ADA3A819E71AF423C47A1EB00AF66AAD1524EFD63BFAB4CECCB255DB06B510784C1A43884BDEFD77278A16863B2D29C2B763A142C1D01F8EB2BCE676D35ECB67B3E67102EA5F6DC9359DB87BA75D6B73B8E2750F7F1BF6774FA3A12C689B096C08E2BD816DE52AED735DE785EF46CDE320C692668B27949CA949F0B7DA9FEE3A0D7B5005E02FD246A461AF49732BCCA6DBDAF3E87C9E35B0BE8021E4E8A3E0559F2C9C980CBC55C649AF13D17B6A679DAD32FB4D320D75E6EB40B1A94549EA3921DFDCF415335B67E39BF4118DB20330E0F352F56AD417E4F01CA9FFB6B4260413C6AE83490C4D4382B9C6C7ED89E1545C4329CBE8C617FA8178DCC0BF035DB73B46D50204B7E9F340AD7F49C46E82185A53907AD7475933B76E61D0A47329ED200858CF8334DC0A122384C7546B2652667AD'
+        )
+        res.pulse.should.have.property(
+          'outputValue',
+          '274E031530B2C773494EBFD9827DF4B20BF83B65BCFC5107B97D7C307713E2FFB80C8FD3B7028F457783E88BB07BBD2BC190BC42BA3F56BA2E2F74E04D4E5E98'
+        )
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
     })
   })
 })
 
-describe('beacon.next', function() {
-  it('should return all expected values for a specific next pulse', function(done) {
-    beacon.next(1494166740, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property('version', 'Version 1.0')
-      res.should.have.property('frequency', 60)
-      res.should.have.property('timeStamp', 1494166800)
-      res.should.have.property('timeStampISO8601', '2017-05-07T14:20:00.000Z')
-      res.should.have.property(
-        'seedValue',
-        'E195AB64FEDA7AC17BB24A143FBF02D9127EBD650A00A0B3A8DC191074827159D34DD6BC35194909FF1054A3156F587979D8A700983301D16BD7260D1F8AADB1'
-      )
-      res.should.have.property(
-        'previousOutputValue',
-        '01BE623A11E19BA6C4FA9078A531FBE74B71AA8D64A99F1303698DF8B7712F30AB689AE92E6ADDD45D1155542DF0C9E5B2748B09286CB0A4EF19B47B726522E9'
-      )
-      res.should.have.property(
-        'signatureValue',
-        '039B670E37AE2562ACA007EE3F6BA26F02F1047AB95376603BC735AAB729C57056C4775876BBE301B2F3C64DAFDAAF1525FCDC4481CE045CDCB70FB159731FE502B4CA9C557B5012A5E0DAC45A00A495F2C44FC6ABE2079006A3396C3EBB54D07B32BB92257F3E17B1E873E1A8868F16D6A5EE5C13CA936792BE0F48371D7E08732B99398150F46204F3713E2DC1DABDE6259E9828D0B85989BEDB508508C20E328F37B03CE7B228CC1287CF9201E9C39C5D7A90DB8977E2ECF61B38E51BC6C41517D5636BE2CB13E7FA00353C1C8FA5358E0749DBDB0777C22F05D46A25295CBA02C29912BF885EAE6FD0C9717EEB7F905091107E0BE84072965056BABE079A'
-      )
-      res.should.have.property(
-        'outputValue',
-        '51E76422503BCAF38659D98CFA4EE2D63DCCD1646405CA4FFE068EA48995DC23016EA701AF391EC125109BED04EF2F9B0B29C546BB970C7E28654DCA17AD8012'
-      )
-      res.should.have.property('statusCode', 0)
-      res.should.have.property('validSignature', true)
-      done()
+describe('getNextPulseAsync', function() {
+  it('should throw the proper error with a bad timestamp', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await beacon.getClosestPulseAsync('bad')
+        reject('no error thrown')
+      } catch (error) {
+        error.should.have.property('message', 'Invalid timestamp')
+        resolve()
+      }
+    })
+  })
+  it('should return the expected value for the testTimestamp', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let res = await beacon.getNextPulseAsync(testTimestamp)
+        res.should.have.property('pulse')
+        res.pulse.should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54610'
+        )
+        res.pulse.should.have.property('version', 'Version 2.0')
+        res.pulse.should.have.property('cipherSuite', 0)
+        res.pulse.should.have.property('period', 60000)
+        res.pulse.should.have.property(
+          'certificateId',
+          '5501e3d72bc42f3b96e16de4dcadcb16768e109662bd16d667d5fd9aee585af31bbdc5dd4f53592276064b53dddd76c8f3604b2a41db6e09f78f82bb5d6569e7'
+        )
+        res.pulse.should.have.property('chainIndex', 1)
+        res.pulse.should.have.property('pulseIndex', 54610)
+        res.pulse.should.have.property('timeStamp', '2018-08-30T17:44:00.000Z')
+        res.pulse.should.have.property(
+          'localRandomValue',
+          'F6F8318BED4A7236330C81E948ACF4DBAFD7F3597A66683C95C731B391098823FE489358B5255FFC6FC429884F5749BEF296D1AD5D84B3DD96BAAA12FEDEC005'
+        )
+        res.pulse.should.have.property('external')
+        res.pulse.external.should.have.property(
+          'sourceId',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.external.should.have.property('statusCode', 0)
+        res.pulse.external.should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.should.have.property('listValues')
+        res.pulse.listValues.should.be.instanceof(Array).and.have.lengthOf(5)
+        res.pulse.listValues[0].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54609'
+        )
+        res.pulse.listValues[0].should.have.property('type', 'previous')
+        res.pulse.listValues[0].should.have.property(
+          'value',
+          '20695B01257C5009EAB6CF7BF1F286EE7D825AC7B22E9F16AFCEE4F913BBCF4B707098DE4CBBD6788C9DC98F917E8C5B0F21EC926F348E2399C6459B57C6A4DA'
+        )
+        res.pulse.listValues[1].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54566'
+        )
+        res.pulse.listValues[1].should.have.property('type', 'hour')
+        res.pulse.listValues[1].should.have.property(
+          'value',
+          '3935CB5E44B1AD0F3DE24694CFCC981B22B3521D9A31EA62B24E14853B9B7ACA5FBF548C0F54404A94ECE99739DCED1021AE830F08BF26B0B76399D75673926B'
+        )
+        res.pulse.listValues[2].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/53546'
+        )
+        res.pulse.listValues[2].should.have.property('type', 'day')
+        res.pulse.listValues[2].should.have.property(
+          'value',
+          'F31907264F879C932A17547CCB2285540BA8DB9D5E797C9A047AD7FCA418C1BDFA679D3475EB6BB558285B166B661CEA0FFED8611B832C14B91264A914A2990D'
+        )
+        res.pulse.listValues[3].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/11793'
+        )
+        res.pulse.listValues[3].should.have.property('type', 'month')
+        res.pulse.listValues[3].should.have.property(
+          'value',
+          '6774C12709D6514ABBC4B96D8A7AD5E73C5C68986B976A17ED4191452AF5098B1C390D6893D253DDA3C52B49BEFA4BB3E666F37EF6420F96974CAA1AF92FF5D7'
+        )
+        res.pulse.listValues[4].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/1'
+        )
+        res.pulse.listValues[4].should.have.property('type', 'year')
+        res.pulse.listValues[4].should.have.property(
+          'value',
+          '7665F054F21B50DF62CD3E50AF8EB783E30D271B091DE051212D301E0E3D17FFCF0367DB41CFFD3C51E88BDE0B0621F49EB03435BC373D5D49480941A8B3547E'
+        )
+        res.pulse.should.have.property(
+          'precommitmentValue',
+          'AF8C7965FBC15ED1F0F4C18659723D53E2648B1E6D152A3101798E59640CA59A8C83515A31E9AAEE0E942B276120AE500D0898C1FED272339BA847C7E0629049'
+        )
+        res.pulse.should.have.property('statusCode', 0)
+        res.pulse.should.have.property(
+          'signatureValue',
+          '6C0BC22FB1C3422F0CDE311576A4B2C320E9E166E8FA0A729F451DD0D8A09D888FDAB1E84E8E68A4882F49E034AA8870B2EEFEC4B20C906B7D0F24D084D89136C89837116D7BFD33B5C45CAD96D38CEC76C05EBC764D92794353D376AC03B84E3FA837D02B6CD58283C16D2281867B3C045162C76527B9AC8958AE99582ADD6919C167446EEB254856AC6FF394A9865BB5E7552FF800907AFD29588EB475DF0CE515EE2A997C9289E8BDFD5CD8723F314F46B8C76ACBE2E951C764D48FDC99C9A07DB5EE8C75D076291B6BEA0A1ADA3A819E71AF423C47A1EB00AF66AAD1524EFD63BFAB4CECCB255DB06B510784C1A43884BDEFD77278A16863B2D29C2B763A142C1D01F8EB2BCE676D35ECB67B3E67102EA5F6DC9359DB87BA75D6B73B8E2750F7F1BF6774FA3A12C689B096C08E2BD816DE52AED735DE785EF46CDE320C692668B27949CA949F0B7DA9FEE3A0D7B5005E02FD246A461AF49732BCCA6DBDAF3E87C9E35B0BE8021E4E8A3E0559F2C9C980CBC55C649AF13D17B6A679DAD32FB4D320D75E6EB40B1A94549EA3921DFDCF415335B67E39BF4118DB20330E0F352F56AD417E4F01CA9FFB6B4260413C6AE83490C4D4382B9C6C7ED89E1545C4329CBE8C617FA8178DCC0BF035DB73B46D50204B7E9F340AD7F49C46E82185A53907AD7475933B76E61D0A47329ED200858CF8334DC0A122384C7546B2652667AD'
+        )
+        res.pulse.should.have.property(
+          'outputValue',
+          '274E031530B2C773494EBFD9827DF4B20BF83B65BCFC5107B97D7C307713E2FFB80C8FD3B7028F457783E88BB07BBD2BC190BC42BA3F56BA2E2F74E04D4E5E98'
+        )
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
     })
   })
 })
 
-describe('beacon.startChain', function() {
-  it('should return all expected values for first pulse', function(done) {
-    // Why we have to add 1 to the timestamp value returned to retrieve?
-    beacon.startChain(1378395541, function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property('version', 'Version 1.0')
-      res.should.have.property('frequency', 60)
-      res.should.have.property('timeStamp', 1378395540)
-      res.should.have.property('timeStampISO8601', '2013-09-05T15:39:00.000Z')
-      res.should.have.property(
-        'seedValue',
-        '87F49DB997D2EED0B4FDD93BAA4CDFCA49095AF98E54B81F2C39B5C4002EC04B8C9E31FA537E64AC35FA2F038AA80730B054CFCF371AB5584CFB4EFD293280EE'
-      )
-      res.should.have.property(
-        'previousOutputValue',
-        '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
-      )
-      res.should.have.property(
-        'signatureValue',
-        'F93BBE5714944F31983AE8187D5D94F87FFEC2F98185F9EB4FE5DB61A9E5119FB0756E9AF4B7112DEBF541E9E53D05346B7358C12FA43A8E0D695BFFAF193B1C3FFC4AE7BCF6651812B6D60190DB8FF23C9364374737F45F1A89F22E1E492B0F373E4DB523274E9D31C86987C64A26F507008828A358B0E166A197D433597480895E9298C60D079673879C3C1AEDA6306C3201991D0A6778B21462BDEBB8D3776CD3D0FA0325AFE99B2D88A7C357E62170320EFB51F9749B5C7B9E7347178AB051BDD097B226664A2D64AF1557BB31540601849F0BE3AAF31D7A25E2B358EEF5A346937ADE34A110722DA8C037F973350B3846DCAB16C9AA125F2027C246FDB3'
-      )
-      res.should.have.property(
-        'outputValue',
-        '17070B49DBF3BA12BEA427CB6651ECF7860FDC3792268031B77711D63A8610F4CDA551B7FB331103889A62E2CB23C0F85362BBA49B9E0086D1DA0830E4389AB1'
-      )
-      res.should.have.property('statusCode', 1) // start of chain record
-      res.should.have.property('validSignature', true)
-      done()
+describe('getPreviousPulseAsync', function() {
+  it('should throw the proper error with a bad timestamp', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await beacon.getClosestPulseAsync('bad')
+        reject('no error thrown')
+      } catch (error) {
+        error.should.have.property('message', 'Invalid timestamp')
+        resolve()
+      }
+    })
+  })
+  it('should return the expected value for the testTimestamp', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let res = await beacon.getPreviousPulseAsync(testTimestamp)
+        res.should.have.property('pulse')
+        res.pulse.should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54609'
+        )
+        res.pulse.should.have.property('version', 'Version 2.0')
+        res.pulse.should.have.property('cipherSuite', 0)
+        res.pulse.should.have.property('period', 60000)
+        res.pulse.should.have.property(
+          'certificateId',
+          '5501e3d72bc42f3b96e16de4dcadcb16768e109662bd16d667d5fd9aee585af31bbdc5dd4f53592276064b53dddd76c8f3604b2a41db6e09f78f82bb5d6569e7'
+        )
+        res.pulse.should.have.property('chainIndex', 1)
+        res.pulse.should.have.property('pulseIndex', 54609)
+        res.pulse.should.have.property('timeStamp', '2018-08-30T17:43:00.000Z')
+        res.pulse.should.have.property(
+          'localRandomValue',
+          'D6CB94B5850D45DEECDE6558DFA9CB74B44136043A4027BB1B70CF931122F010CB962AE6E82B46508377574BC0A8E23EE394612FF49FE8577D82385AFB24E19C'
+        )
+        res.pulse.should.have.property('external')
+        res.pulse.external.should.have.property(
+          'sourceId',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.external.should.have.property('statusCode', 0)
+        res.pulse.external.should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.should.have.property('listValues')
+        res.pulse.listValues.should.be.instanceof(Array).and.have.lengthOf(5)
+        res.pulse.listValues[0].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54608'
+        )
+        res.pulse.listValues[0].should.have.property('type', 'previous')
+        res.pulse.listValues[0].should.have.property(
+          'value',
+          '758EEDD4AFC6BC3693CC2CD367E4A4CDA7E6B033EE33EBE543D335F370CD35EFEAF5343B1FAFE4F7DA0EECA7882E7668E5C61DD98B55AFF4D6161ED87D0479F3'
+        )
+        res.pulse.listValues[1].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/54566'
+        )
+        res.pulse.listValues[1].should.have.property('type', 'hour')
+        res.pulse.listValues[1].should.have.property(
+          'value',
+          '3935CB5E44B1AD0F3DE24694CFCC981B22B3521D9A31EA62B24E14853B9B7ACA5FBF548C0F54404A94ECE99739DCED1021AE830F08BF26B0B76399D75673926B'
+        )
+        res.pulse.listValues[2].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/53546'
+        )
+        res.pulse.listValues[2].should.have.property('type', 'day')
+        res.pulse.listValues[2].should.have.property(
+          'value',
+          'F31907264F879C932A17547CCB2285540BA8DB9D5E797C9A047AD7FCA418C1BDFA679D3475EB6BB558285B166B661CEA0FFED8611B832C14B91264A914A2990D'
+        )
+        res.pulse.listValues[3].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/11793'
+        )
+        res.pulse.listValues[3].should.have.property('type', 'month')
+        res.pulse.listValues[3].should.have.property(
+          'value',
+          '6774C12709D6514ABBC4B96D8A7AD5E73C5C68986B976A17ED4191452AF5098B1C390D6893D253DDA3C52B49BEFA4BB3E666F37EF6420F96974CAA1AF92FF5D7'
+        )
+        res.pulse.listValues[4].should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/1'
+        )
+        res.pulse.listValues[4].should.have.property('type', 'year')
+        res.pulse.listValues[4].should.have.property(
+          'value',
+          '7665F054F21B50DF62CD3E50AF8EB783E30D271B091DE051212D301E0E3D17FFCF0367DB41CFFD3C51E88BDE0B0621F49EB03435BC373D5D49480941A8B3547E'
+        )
+        res.pulse.should.have.property(
+          'precommitmentValue',
+          '88C34D192954E0829524C6DC5098C37DE17A875EE1B2575BE07D388B5244917765B256B6DED0F6BB1C66BEE325324D9092416CAFC550A45C4E84DCEE2E6D1003'
+        )
+        res.pulse.should.have.property('statusCode', 0)
+        res.pulse.should.have.property(
+          'signatureValue',
+          'B6601661B8816124FA2DFC56DC860B4C933F7FE26C361227D9145648D6F06FFFED76F0FF2E0D46BA7910F38683AE1F42947A0C9068F6C316AF750E6285236EEF460C02F5515637F47E3492DB3E3533E546310519F08303A3DE770872DDAD806580EBE18CFE6B543A7F6A8789694B2576AA3C2F3EE31A743AA9E7A05265EB7648620C580E174FE3DB5CC5A97BB3824E7863F5EB32328BD4169AB9504FE3BE97F0F59DD003F920558C376A3FF95BB977D038A7952D5D98E64244D42187DA0AAEE52B927BB6648BBEB338E06A522CE51D89B9800B02FF82BB6BBB695FBECE63F3F1893E1D451F6BE1ABD1631FF29F242F6747118A3FBE5CF1BDBBEFF76191C0C01080B8A0A5A4AB171E72291C5318BF437979172BF0930C8F7FEF7992F86A13CA048DFF88EFFF46900BDCCE998319A50F9E6B35EB5994E41DFBD9A1B309F13A8D9D51AE996B5E4A6823725F0D9983872DF387D2F242E2F685FAB4A7A7BB6EC7441BFC2FCA04127CD6E30CBE0B40F900B7A02129254848B80E99560FDD00EDD76ED327F11CDE26F810BB5EE6FFCCCABCA54347D5B7021AD3646F6942B79B985AE33C3BAC94DF7967ACC1CD185BC5B635C666C9CF95A425783917863B5738DA9715D110B9DA60B9E04C3A5A088736267DB270CFF6D34BB1F36E7FFD5207943EFC23D65C321D0F014516BF7A6F6A7ED133FA7F69EDCE0F626DF8C3A334453FC56396B1'
+        )
+        res.pulse.should.have.property(
+          'outputValue',
+          '20695B01257C5009EAB6CF7BF1F286EE7D825AC7B22E9F16AFCEE4F913BBCF4B707098DE4CBBD6788C9DC98F917E8C5B0F21EC926F348E2399C6459B57C6A4DA'
+        )
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
     })
   })
 })
 
-describe('beacon.last', function() {
-  it('should return all expected values for last pulse', function(done) {
-    beacon.last(function(err, res) {
-      if (err !== null) done(err)
-      res.should.have.property('version', 'Version 1.0')
-      res.should.have.property('frequency', 60)
-      res.should.have.property('statusCode', 0)
-      res.should.have.property('validSignature', true)
-      done()
+describe('getMostRecentPulseAsync', function() {
+  it('should return the most recent pulse', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let res = await beacon.getMostRecentPulseAsync()
+        res.should.have.property('pulse')
+        res.pulse.should.have.property('uri')
+        res.pulse.should.have.property('version', 'Version 2.0')
+        res.pulse.should.have.property('cipherSuite')
+        res.pulse.should.have.property('period')
+        res.pulse.should.have.property('certificateId')
+        res.pulse.should.have.property('chainIndex')
+        res.pulse.should.have.property('pulseIndex')
+        res.pulse.should.have.property('timeStamp')
+        res.pulse.should.have.property('localRandomValue')
+        res.pulse.should.have.property('external')
+        res.pulse.external.should.have.property('sourceId')
+        res.pulse.external.should.have.property('statusCode')
+        res.pulse.external.should.have.property('value')
+        res.pulse.should.have.property('listValues')
+        res.pulse.listValues.should.be.instanceof(Array).and.have.lengthOf(5)
+        res.pulse.listValues[0].should.have.property('uri')
+        res.pulse.listValues[0].should.have.property('type', 'previous')
+        res.pulse.listValues[0].should.have.property('value')
+        res.pulse.listValues[1].should.have.property('uri')
+        res.pulse.listValues[1].should.have.property('type', 'hour')
+        res.pulse.listValues[1].should.have.property('value')
+        res.pulse.listValues[2].should.have.property('uri')
+        res.pulse.listValues[2].should.have.property('type', 'day')
+        res.pulse.listValues[2].should.have.property('value')
+        res.pulse.listValues[3].should.have.property('uri')
+        res.pulse.listValues[3].should.have.property('type', 'month')
+        res.pulse.listValues[3].should.have.property('value')
+        res.pulse.listValues[4].should.have.property('uri')
+        res.pulse.listValues[4].should.have.property('type', 'year')
+        res.pulse.listValues[4].should.have.property('value')
+        res.pulse.should.have.property('precommitmentValue')
+        res.pulse.should.have.property('statusCode')
+        res.pulse.should.have.property('signatureValue')
+        res.pulse.should.have.property('outputValue')
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
+  })
+})
+
+describe('getPulseByChainAndPulseIndexAsync', function() {
+  it('should throw the proper error with a bad chainIndex', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await beacon.getPulseByChainAndPulseIndexAsync('bad', 1)
+        reject('no error thrown')
+      } catch (error) {
+        error.should.have.property('message', 'Invalid chainIndex')
+        resolve()
+      }
+    })
+  })
+  it('should throw the proper error with a bad pulseIndex', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await beacon.getPulseByChainAndPulseIndexAsync(1, 'bad')
+        reject('no error thrown')
+      } catch (error) {
+        error.should.have.property('message', 'Invalid pulseIndex')
+        resolve()
+      }
+    })
+  })
+  it('should return the expected value for the pulse at index 1 on chain 1', function() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let res = await beacon.getPulseByChainAndPulseIndexAsync(1, 1)
+        res.should.have.property('pulse')
+        res.pulse.should.have.property(
+          'uri',
+          'https://beacon.nist.gov/beacon/2.0/chain/1/pulse/1'
+        )
+        res.pulse.should.have.property('version', 'Version 2.0')
+        res.pulse.should.have.property('cipherSuite', 0)
+        res.pulse.should.have.property('period', 60000)
+        res.pulse.should.have.property(
+          'certificateId',
+          '5501e3d72bc42f3b96e16de4dcadcb16768e109662bd16d667d5fd9aee585af31bbdc5dd4f53592276064b53dddd76c8f3604b2a41db6e09f78f82bb5d6569e7'
+        )
+        res.pulse.should.have.property('chainIndex', 1)
+        res.pulse.should.have.property('pulseIndex', 1)
+        res.pulse.should.have.property('timeStamp', '2018-07-23T19:26:00.000Z')
+        res.pulse.should.have.property(
+          'localRandomValue',
+          '88C3BF231794D4D6654924EF771268AF1DA9C2D6A3EA62A79C42D6399CD9DE811C5C32CA71DE2EC867510A8CE44BE6D8694488BE530C02EEB602D8703A4D294F'
+        )
+        res.pulse.should.have.property('external')
+        res.pulse.external.should.have.property(
+          'sourceId',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.external.should.have.property('statusCode', 0)
+        res.pulse.external.should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.should.have.property('listValues')
+        res.pulse.listValues.should.be.instanceof(Array).and.have.lengthOf(5)
+        res.pulse.listValues[0].should.have.property('uri', null)
+        res.pulse.listValues[0].should.have.property('type', 'previous')
+        res.pulse.listValues[0].should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.listValues[1].should.have.property('uri', null)
+        res.pulse.listValues[1].should.have.property('type', 'hour')
+        res.pulse.listValues[1].should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.listValues[2].should.have.property('uri', null)
+        res.pulse.listValues[2].should.have.property('type', 'day')
+        res.pulse.listValues[2].should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.listValues[3].should.have.property('uri', null)
+        res.pulse.listValues[3].should.have.property('type', 'month')
+        res.pulse.listValues[3].should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.listValues[4].should.have.property('uri', null)
+        res.pulse.listValues[4].should.have.property('type', 'year')
+        res.pulse.listValues[4].should.have.property(
+          'value',
+          '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        )
+        res.pulse.should.have.property(
+          'precommitmentValue',
+          '6462C73A8D4913910C5AAA748EA82CD67EB4B73D2B3025121AA61354916CA65B9D25FD5FBECE2583E7C5EB172ECF2740472935A7A9013E6E7C84A9EBD6EFFA15'
+        )
+        res.pulse.should.have.property('statusCode', 1)
+        res.pulse.should.have.property(
+          'signatureValue',
+          '8FD04C3CB2631064C7917C98B606870D6A38C7CFD05CB589EB5F139471F07C8D553B997B583EC14648A1ECACDF0C0ED5E7C8F888E7F1DAF8D34E697B8A64A969DB92DBC8D49A4085AFA6CA068667677E6442F6E368458DE7E32490BD6C80F79276A1EBBD602B8379936758444214A3B8B5C3BF70A21CF4FD468B6C69717CC779CFA2D195ADB9F95139BB334E441D0633A18B7475FAEF4CDDF0F1E04FC84B1497EFE544B2F16F6BDD533E6DA444517FBB4A6C016845CF3367E296097B469A3AE6A19C30669DE37BCA1984C5410E631FFEB6DA1CF12654C98B5062C681D49594682938DF1C0E76A08B8F1896FDAB79A2AF4B8E12BD1127E4C8C046E7CA5F02359342114DCC7A9178937865B004BA86B2995045AA8F5505D4824C9855218F44AE83A99DE091DE619E1D6CA9E8A0C7E3E1ACBD3BC1E6354087EA5306328541D77B9E68364EA9FA747C3794F1B90A77350FE5A7DE0B6907339D2C9A3C57A07AECD70EC71CD5371AEE203934A472E5A7FFCB31B01EFF52374D5A7BFA55E8722843ADBBD63183BEE5565C01F51DB47069DA5007D1CF76FDA9070EAF4A12929A66190FC594377D60044F4E1809BD297CB540A90FFEE22F14F8C2754A7F256A5CA07AB451366102ECC7DFF8642CAEE1AFCF0147ECA24C79E9163B6E9FB262D179690F2460F269C3B209FE67737A60DB98B807E1E3147F3A8BBB482BE4BA93372508AD837A'
+        )
+        res.pulse.should.have.property(
+          'outputValue',
+          '7665F054F21B50DF62CD3E50AF8EB783E30D271B091DE051212D301E0E3D17FFCF0367DB41CFFD3C51E88BDE0B0621F49EB03435BC373D5D49480941A8B3547E'
+        )
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
     })
   })
 })
