@@ -1,43 +1,39 @@
 var beacon = require('../index.js')
 
-let ts = beacon.timestampInSecondsMinutesAgo(10)
+async function start() {
+  let ts = beacon.timestampMinutesAgo(45)
 
-beacon.current(ts, function(err, res) {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log(res)
+  try {
+    let result = await beacon.getClosestPulseAsync(ts)
+    console.log(result)
+  } catch (error) {
+    console.error(
+      `Could not retrieve closest pulse to ${ts} : ${error.message}`
+    )
   }
-})
 
-beacon.previous(ts, function(err, res) {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log(res)
+  try {
+    let result = await beacon.getNextPulseAsync(ts)
+    console.log(result)
+  } catch (error) {
+    console.error(`Could not retrieve next pulse from ${ts} : ${error.message}`)
   }
-})
 
-beacon.next(ts, function(err, res) {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log(res)
+  try {
+    let result = await beacon.getPreviousPulseAsync(ts)
+    console.log(result)
+  } catch (error) {
+    console.error(
+      `Could not retrieve previous pulse from ${ts} : ${error.message}`
+    )
   }
-})
 
-beacon.last(function(err, res) {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log(res)
+  try {
+    let result = await beacon.getMostRecentPulseAsync()
+    console.log(result)
+  } catch (error) {
+    console.error(`Could not retrieve most recent pulse : ${error.message}`)
   }
-})
+}
 
-beacon.startChain(ts, function(err, res) {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log(res)
-  }
-})
+start()

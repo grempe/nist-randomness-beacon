@@ -1,205 +1,300 @@
-const request = require('request')
-const xml2js = require('xml2js')
 const crypto = require('crypto')
-const Int64BE = require('int64-buffer').Int64BE
-const path = require('path')
-const fs = require('fs')
+const int64BE = require('int64-buffer').Int64BE
+const rp = require('request-promise-native')
 
 // Must have trailing slash
-const BEACON_API_URI_BASE = 'https://beacon.nist.gov/rest/record/'
+const BEACON_V2_API_URI_BASE = 'https://beacon.nist.gov/beacon/2.0/'
 
 // The certificate (public key) used by beacon to sign a response
-const BEACON_CERT = `-----BEGIN CERTIFICATE-----
-MIIHZTCCBk2gAwIBAgIESTWNPjANBgkqhkiG9w0BAQsFADBtMQswCQYDVQQGEwJV
-UzEQMA4GA1UEChMHRW50cnVzdDEiMCAGA1UECxMZQ2VydGlmaWNhdGlvbiBBdXRo
-b3JpdGllczEoMCYGA1UECxMfRW50cnVzdCBNYW5hZ2VkIFNlcnZpY2VzIFNTUCBD
-QTAeFw0xNDA1MDcxMzQ4MzZaFw0xNzA1MDcxNDE4MzZaMIGtMQswCQYDVQQGEwJV
-UzEYMBYGA1UEChMPVS5TLiBHb3Zlcm5tZW50MR8wHQYDVQQLExZEZXBhcnRtZW50
-IG9mIENvbW1lcmNlMTcwNQYDVQQLEy5OYXRpb25hbCBJbnN0aXR1dGUgb2YgU3Rh
-bmRhcmRzIGFuZCBUZWNobm9sb2d5MRAwDgYDVQQLEwdEZXZpY2VzMRgwFgYDVQQD
-Ew9iZWFjb24ubmlzdC5nb3YwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
-AQC/m2xcckaSYztt6/6YezaUmqIqY5CLvrfO2esEIJyFg+cv7S7exL3hGYeDCnQL
-VtUIGViAnO9yCXDC2Kymen+CekU7WEtSB96xz/xGrY3mbwjS46QSOND9xSRMroF9
-xbgqXxzJ7rL/0RMUkku3uurGb/cxUpzKt6ra7iUnzkk3BBk73kr2OXFyYYbtrN71
-s0B9qKKJZuPQqmA5n80Xc3E2YbaoAW4/gesncFNL7Sdxw9NIA1L4feu/o8xp3FNP
-pv2e25C0113x+yagvb1W0mw6ISwAKhJ+6G4t4hFejl7RujuiDfORgzIhHMR4CyWt
-PZFVn2qxZuVooj1+mduLIXhDAgMBAAGjggPKMIIDxjAOBgNVHQ8BAf8EBAMCBsAw
-FwYDVR0gBBAwDjAMBgpghkgBZQMCAQMHMIIBXgYIKwYBBQUHAQEEggFQMIIBTDCB
-uAYIKwYBBQUHMAKGgatsZGFwOi8vc3NwZGlyLm1hbmFnZWQuZW50cnVzdC5jb20v
-b3U9RW50cnVzdCUyME1hbmFnZWQlMjBTZXJ2aWNlcyUyMFNTUCUyMENBLG91PUNl
-cnRpZmljYXRpb24lMjBBdXRob3JpdGllcyxvPUVudHJ1c3QsYz1VUz9jQUNlcnRp
-ZmljYXRlO2JpbmFyeSxjcm9zc0NlcnRpZmljYXRlUGFpcjtiaW5hcnkwSwYIKwYB
-BQUHMAKGP2h0dHA6Ly9zc3B3ZWIubWFuYWdlZC5lbnRydXN0LmNvbS9BSUEvQ2Vy
-dHNJc3N1ZWRUb0VNU1NTUENBLnA3YzBCBggrBgEFBQcwAYY2aHR0cDovL29jc3Au
-bWFuYWdlZC5lbnRydXN0LmNvbS9PQ1NQL0VNU1NTUENBUmVzcG9uZGVyMBsGA1Ud
-CQQUMBIwEAYJKoZIhvZ9B0QdMQMCASIwggGHBgNVHR8EggF+MIIBejCB6qCB56CB
-5IaBq2xkYXA6Ly9zc3BkaXIubWFuYWdlZC5lbnRydXN0LmNvbS9jbj1XaW5Db21i
-aW5lZDEsb3U9RW50cnVzdCUyME1hbmFnZWQlMjBTZXJ2aWNlcyUyMFNTUCUyMENB
-LG91PUNlcnRpZmljYXRpb24lMjBBdXRob3JpdGllcyxvPUVudHJ1c3QsYz1VUz9j
-ZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0O2JpbmFyeYY0aHR0cDovL3NzcHdlYi5t
-YW5hZ2VkLmVudHJ1c3QuY29tL0NSTHMvRU1TU1NQQ0ExLmNybDCBiqCBh6CBhKSB
-gTB/MQswCQYDVQQGEwJVUzEQMA4GA1UEChMHRW50cnVzdDEiMCAGA1UECxMZQ2Vy
-dGlmaWNhdGlvbiBBdXRob3JpdGllczEoMCYGA1UECxMfRW50cnVzdCBNYW5hZ2Vk
-IFNlcnZpY2VzIFNTUCBDQTEQMA4GA1UEAxMHQ1JMNjY3MzArBgNVHRAEJDAigA8y
-MDE0MDUwNzEzNDgzNlqBDzIwMTYwNjEyMTgxODM2WjAfBgNVHSMEGDAWgBTTzudb
-iafNbJHGZzapWHIJ7OI58zAdBgNVHQ4EFgQUGIOcf6r7Z9wk+2/YuG5oTs7Qwk8w
-CQYDVR0TBAIwADAZBgkqhkiG9n0HQQAEDDAKGwRWOC4xAwIEsDANBgkqhkiG9w0B
-AQsFAAOCAQEASc+lZBbJWsHB2WnaBr8ZfBqpgS51Eh+wLchgIq7JHhVn+LagkR8C
-XmvP57a0L/E+MRBqvH2RMqwthEcjXio2WIu/lyKZmg2go9driU6H3s89X8snblDF
-1B+iL73vhkLVdHXgStMS8AHbm+3BW6yjHens1tVmKSowg1P/bGT3Z4nmamdY9oLm
-9sCgFccthC1BQqtPv1XsmLshJ9vmBbYMsjKq4PmS0aLA59J01YMSq4U1kzcNS7wI
-1/YfUrfeV+r+j7LKBgNQTZ80By2cfSalEqCe8oxqViAz6DsfPCBeE57diZNLiJmj
-a2wWIBquIAXxvD8w2Bue7pZVeUHls5V5dA==
------END CERTIFICATE-----
-`
+const BEACON_V2_CERT = `-----BEGIN CERTIFICATE-----
+MIIHWzCCBkOgAwIBAgIQCrOnD+Dvk39rGwz3xX6StTANBgkqhkiG9w0BAQsFADBE
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMR4wHAYDVQQDExVE
+aWdpQ2VydCBHbG9iYWwgQ0EgRzIwHhcNMTgwMTEwMDAwMDAwWhcNMTkwMTExMTIw
+MDAwWjCBozELMAkGA1UEBhMCVVMxETAPBgNVBAgTCE1hcnlsYW5kMRUwEwYDVQQH
+EwxHYWl0aGVyc2J1cmcxNzA1BgNVBAoTLk5hdGlvbmFsIEluc3RpdHV0ZSBvZiBT
+dGFuZGFyZHMgYW5kIFRlY2hub2xvZ3kxEDAOBgNVBAsTB0lUTC9DU0QxHzAdBgNV
+BAMTFmVuZ2luZS5iZWFjb24ubmlzdC5nb3YwggIiMA0GCSqGSIb3DQEBAQUAA4IC
+DwAwggIKAoICAQDqdbhEDfBOCzCjW6cKBSKkkl8pc7v6VDDI21VAs5fOyZRoSwfW
+tHc9YkVoYBaNTfmUBW5Q8hWbk65VftCznjEFIa05ldME/ABGKSkQKFyC3ELsE4+e
+nkM1I9EJOt9dCSH9dSmzwjFf8C/fxhGqYEatH8GenuQ/FbU7shiigiqHUJU9SSVZ
+trH4qV7szmcIBd/VzVTgLFipF8nl6EoScEIdgOC+ZmRo0LLfB/ulUT7iaXuzB0GP
+ocMjwk4yfJgHNkHitgGMoDNYGVz4sU0QCtQSAXjjvwAMb+EzGBV08Zj2qNMEANKX
+cvdRRA340t3oC6PbmeW+7w+IRo0to8AqhUlSAobmty6pOUzykEdhg/g6FKOowQEz
+JZkhHd1/7Fh7XRHvc6EKz5tjAP+c5MUP9ni6O2N6uzrNbm94p0JmGk6DwJVWS0A1
+l7M/xjON3aZN2f2ZSlezurBh9GBWENniHUsG/iOJdtjb+VE8VCr+J3Ltn62CfbgU
+4aW+XbwHtZq+jtLzf2VKgHpeM4LKCzgQbhSbJNuuNCm2ib8PaS/f+kz+p9D8Rd/q
+Te4/w03a+bqZRBcql8K7n73ysT+r595oos6AQujj4rgOHU7byZDLRGbMHPhox4OD
+Dd7iYGhMHcfUez7FYJF0zNQafEt7iZP6U/PigtPoi3lJNPLcijbNcFNSowIDAQAB
+o4IC5zCCAuMwHwYDVR0jBBgwFoAUJG4rLdBqklFRJWkBqppHponnQCAwHQYDVR0O
+BBYEFB69FZvO+nhCyDuDd1uLZchw4+j3MCEGA1UdEQQaMBiCFmVuZ2luZS5iZWFj
+b24ubmlzdC5nb3YwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMB
+BggrBgEFBQcDAjB3BgNVHR8EcDBuMDWgM6Axhi9odHRwOi8vY3JsMy5kaWdpY2Vy
+dC5jb20vRGlnaUNlcnRHbG9iYWxDQUcyLmNybDA1oDOgMYYvaHR0cDovL2NybDQu
+ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0R2xvYmFsQ0FHMi5jcmwwTAYDVR0gBEUwQzA3
+BglghkgBhv1sAQEwKjAoBggrBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQu
+Y29tL0NQUzAIBgZngQwBAgIwdAYIKwYBBQUHAQEEaDBmMCQGCCsGAQUFBzABhhho
+dHRwOi8vb2NzcC5kaWdpY2VydC5jb20wPgYIKwYBBQUHMAKGMmh0dHA6Ly9jYWNl
+cnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEdsb2JhbENBRzIuY3J0MAkGA1UdEwQC
+MAAwggEFBgorBgEEAdZ5AgQCBIH2BIHzAPEAdgC72d+8H4pxtZOUI5eqkntHOFeV
+CqtS6BqQlmQ2jh7RhQAAAWDgpJnPAAAEAwBHMEUCIQC1eW0bNSeOZNYU8Of5/oZr
+fruiiiIYK/QKct/hCsXgdwIgS5/nMOviHGu2/FLTMkWFAva+wBVGNrsRdbD6yLoQ
+BNgAdwCHdb/nWXz4jEOZX73zbv9WjUdWNv9KtWDBtOr/XqCDDwAAAWDgpJm5AAAE
+AwBIMEYCIQCq1AvkODGe/zTX56kishId42HRCiEDa1/Wq8F9/DOabwIhAI5UbEeE
+Q20nuadFVxpJgirXFYpAzjlr6/emIXRc5E1LMA0GCSqGSIb3DQEBCwUAA4IBAQAs
+WjP0Sj4r2nHWLKi45aUwhS+WZzq3cDPa92QDP6LnFTtzUicPpOyLYcWOsc7SKyGi
+BlWgxHp9vmoO+25gCXSbet42Yl1PXFhTpZcPHPxO/BknRGe9CY1pmOOyjsxwMZ8a
+qH2He7anCpHk5AEfLX0F+WHjEtnYBrRhMM6GtftHXXxuAhGuH0zmzbwakREOoWNO
+Q2iTFVBb9UybxHbl9r0rVD3x5FpRrTf90l5dhrERzhtjone/DtQU/5wRagRTKjeQ
+VaCu59An0vNCJYVWPbOypZCRdbcKlcd3GoMx2DosfFcdgSLR1h9+O0y3DsonJgiT
+Q2l+vxzeaIsZqUEYrLaq
+-----END CERTIFICATE-----`
 
-const vendor = path.dirname(fs.realpathSync(__filename))
-const BEACON_KEY = fs.readFileSync(vendor + '/pubkey.pem').toString()
+// Private internal functions
 
-let _getBeacon = (path, cb) => {
+async function _getBeaconAsync(path) {
   let options = {
     method: 'GET',
-    uri: BEACON_API_URI_BASE + path,
-    gzip: true
+    uri: BEACON_V2_API_URI_BASE + path,
+    json: true,
+    gzip: true,
+    resolveWithFullResponse: true,
+    timeout: 5000
+  }
+  let response = await rp(options)
+  let isValid = await _validateBeaconResponseAsync(response.body.pulse)
+  if (!isValid) throw new Error('Unable to validate server response')
+  return response.body
+}
+
+async function _validateBeaconResponseAsync(pulse) {
+  if (!pulse) throw new Error('Missing attribute [pulse] in server response')
+  if (!pulse.hasOwnProperty('uri'))
+    throw new Error('Missing attribute [puls.uri] in server response')
+  if (!pulse.hasOwnProperty('version'))
+    throw new Error('Missing attribute [pulse.version] in server response')
+  if (!pulse.hasOwnProperty('cipherSuite'))
+    throw new Error('Missing attribute [pulse.cipherSuite] in server response')
+  if (!pulse.hasOwnProperty('period'))
+    throw new Error('Missing attribute [pulse.period] in server response')
+  if (!pulse.hasOwnProperty('certificateId'))
+    throw new Error(
+      'Missing attribute [pulse.certificateId] in server response'
+    )
+  if (!pulse.hasOwnProperty('chainIndex'))
+    throw new Error('Missing attribute [pulse.chainIndex] in server response')
+  if (!pulse.hasOwnProperty('pulseIndex'))
+    throw new Error('Missing attribute [pulse.pulseIndex] in server response')
+  if (!pulse.hasOwnProperty('timeStamp'))
+    throw new Error('Missing attribute [pulse.timeStamp] in server response')
+  if (!pulse.hasOwnProperty('localRandomValue'))
+    throw new Error(
+      'Missing attribute [pulse.localRandomValue] in server response'
+    )
+  if (!pulse.hasOwnProperty('external'))
+    throw new Error('Missing attribute [pulse.external] in server response')
+  if (!pulse.external.hasOwnProperty('sourceId'))
+    throw new Error(
+      'Missing attribute [pulse.external.sourceId] in server response'
+    )
+  if (!pulse.external.hasOwnProperty('statusCode'))
+    throw new Error(
+      'Missing attribute [pulse.external.statusCode] in server response'
+    )
+  if (!pulse.external.hasOwnProperty('value'))
+    throw new Error(
+      'Missing attribute [pulse.external.value] in server response'
+    )
+  if (!pulse.hasOwnProperty('listValues'))
+    throw new Error('Missing attribute [pulse.listValues] in server response')
+  for (let item of pulse.listValues) {
+    if (!item.hasOwnProperty('value'))
+      throw new Error(
+        'Missing attribute [pulse.listValues[x].value] in server response'
+      )
+  }
+  if (!pulse.hasOwnProperty('precommitmentValue'))
+    throw new Error(
+      'Missing attribute [pulse.precommitmentValue] in server response'
+    )
+  if (!pulse.hasOwnProperty('statusCode'))
+    throw new Error('Missing attribute [pulse.statusCode] in server response')
+  if (!pulse.hasOwnProperty('signatureValue'))
+    throw new Error(
+      'Missing attribute [pulse.signatureValue] in server response'
+    )
+  if (!pulse.hasOwnProperty('outputValue'))
+    throw new Error('Missing attribute [pulse.outputValue] in server response')
+
+  return _validateSignatureAsync(pulse)
+}
+
+async function _validateSignatureAsync(pulse) {
+  /*
+  A big-endian hex encoded digital signature using the public key contained in certificateId
+  computed over the SHA-512 hash of (in order):
+
+  strlen(uri);
+  uri as a UTF-8 sequence of characters;
+  strlen(version);
+  version as a UTF-8 sequence of characters;
+  cipherSuite as a 4-byte big-endian integer value;
+  period as a 4-byte big-endian integer value;
+  length(certificateId);
+  certificateId as a hex-decoded sequence of bytes;
+  chainIndex as an 8-byte big-endian integer value;
+  pulseIndex as an 8-byte big-endian integer value;
+  strlen(timestamp);
+  timestamp as a UTF-8 sequence of characters;
+  length(localRandomValue);
+  localRandomValue as a hex-decoded sequence of bytes;
+  length(external/sourceId);
+  external/sourceId as a hex-decoded sequence of bytes;
+  external/statusCode as a 4-byte big-endian integer value;
+  length(external/value);
+  external/value as a hex-decoded sequence of bytes;
+  length(listValue[@type=’previous’]);
+  listValue[@type=’previous’] as a hex-decoded sequence of bytes;
+  length(listValue[@type=’hour’]);
+  listValue[@type=’hour’] as a hex-decoded sequence of bytes;
+  length(listValue[@type=’day’]);
+  listValue[@type=’day’] as a hex-decoded sequence of bytes;
+  length(listValue[@type=’month’]);
+  listValue[@type=’month’] as a hex-decoded sequence of bytes;
+  length(listValue[@type=’year’]);
+  listValue[@type=’year’] as a hex-decoded sequence of bytes;
+  length(precommitmentValue);
+  precommitmentValue as a hex-decoded sequence of bytes;
+  statusCode as a 4-byte big-endian integer value.
+
+  Note: strlen(x) returns the number of characters in the string x; length(x) returns the number of
+  bytes after x has been hex decoded; both strlen(x) and length(x) are encoded as 4-byte big-endian
+  integer values; different listValue types may be used, but if provided, they must be included in the
+  hash in the order they are provided.
+  */
+
+  // strlen(uri);
+  let uriLength = Buffer.alloc(4)
+  uriLength.writeInt32BE(pulse.uri.length)
+  // uri as a UTF-8 sequence of characters;
+  let uri = Buffer.from(pulse.uri, 'utf8')
+  // strlen(version);
+  let versionLength = Buffer.alloc(4)
+  versionLength.writeInt32BE(pulse.version.length)
+  // version as a UTF-8 sequence of characters;
+  let version = Buffer.from(pulse.version, 'utf8')
+  // cipherSuite as a 4-byte big-endian integer value;
+  let cipherSuite = Buffer.alloc(4)
+  cipherSuite.writeInt32BE(pulse.cipherSuite)
+  // period as a 4-byte big-endian integer value;
+  let period = Buffer.alloc(4)
+  period.writeInt32BE(pulse.period)
+  // length(certificateId);
+  // certificateId as a hex-decoded sequence of bytes;
+  let certificateId = Buffer.from(pulse.certificateId, 'hex')
+  let certificateIdLength = Buffer.alloc(4)
+  certificateIdLength.writeInt32BE(certificateId.length)
+  // chainIndex as an 8-byte big-endian integer value;
+  let chainIndex = new int64BE(pulse.chainIndex).toBuffer()
+  // pulseIndex as an 8-byte big-endian integer value;
+  let pulseIndex = new int64BE(pulse.pulseIndex).toBuffer()
+  // strlen(timestamp);
+  let timestampLength = Buffer.alloc(4)
+  timestampLength.writeInt32BE(pulse.timeStamp.length)
+  // timestamp as a UTF-8 sequence of characters;
+  let timestamp = Buffer.from(pulse.timeStamp, 'utf8')
+  // length(localRandomValue);
+  // localRandomValue as a hex-decoded sequence of bytes;
+  let localRandomValue = Buffer.from(pulse.localRandomValue, 'hex')
+  let localRandomValueLength = Buffer.alloc(4)
+  localRandomValueLength.writeInt32BE(localRandomValue.length)
+  // length(external/sourceId);
+  // external/sourceId as a hex-decoded sequence of bytes;
+  let externalSourceId = Buffer.from(pulse.external.sourceId, 'hex')
+  let externalSourceIdLength = Buffer.alloc(4)
+  externalSourceIdLength.writeInt32BE(externalSourceId.length)
+  // external/statusCode as a 4-byte big-endian integer value;
+  let externalStatusCode = Buffer.alloc(4)
+  externalStatusCode.writeInt32BE(pulse.external.statusCode)
+  // length(external/value);
+  // external/value as a hex-decoded sequence of bytes;
+  let externalValue = Buffer.from(pulse.external.value, 'hex')
+  let externalValueLength = Buffer.alloc(4)
+  externalValueLength.writeInt32BE(externalValue.length)
+  // length(listValue[x]);
+  // listValue[x] as a hex-decoded sequence of bytes;
+  let listValuesBuffers = []
+  for (let item of pulse.listValues) {
+    let listValue = Buffer.from(item.value, 'hex')
+    let listValueLength = Buffer.alloc(4)
+    listValueLength.writeInt32BE(listValue.length)
+    listValuesBuffers.push(listValueLength, listValue)
+  }
+  let listValues = Buffer.concat(listValuesBuffers)
+  // length(precommitmentValue);
+  // precommitmentValue as a hex-decoded sequence of bytes;
+  let precommitmentValue = Buffer.from(pulse.precommitmentValue, 'hex')
+  let precommitmentValueLength = Buffer.alloc(4)
+  precommitmentValueLength.writeInt32BE(precommitmentValue.length)
+  // statusCode as a 4-byte big-endian integer value.
+  let statusCode = Buffer.alloc(4)
+  statusCode.writeInt32BE(pulse.statusCode)
+
+  let signatureInput = Buffer.concat([
+    uriLength,
+    uri,
+    versionLength,
+    version,
+    cipherSuite,
+    period,
+    certificateIdLength,
+    certificateId,
+    chainIndex,
+    pulseIndex,
+    timestampLength,
+    timestamp,
+    localRandomValueLength,
+    localRandomValue,
+    externalSourceIdLength,
+    externalSourceId,
+    externalStatusCode,
+    externalValueLength,
+    externalValue,
+    listValues,
+    precommitmentValueLength,
+    precommitmentValue,
+    statusCode
+  ])
+
+  let hash512 = crypto.createHash('sha512')
+  let signatureValue = Buffer.from(pulse.signatureValue, 'hex')
+
+  let certVerifier = crypto.createVerify('RSA-SHA512')
+  certVerifier.update(signatureInput)
+  if (!certVerifier.verify(BEACON_V2_CERT, signatureValue)) {
+    return false
   }
 
-  request(options, (err, response, body) => {
-    if (!err && response.statusCode === 200) {
-      return _parseBeaconResponse(body, cb)
-    } else {
-      return cb(body)
-    }
-  })
+  // outputValue = A 64-byte hex string of the SHA-512 hash of the concatenation of the input into the
+  // signatureValue and the hex decoded signatureValue as a sequence of bytes concatenated in that
+  // order and then hashed.
+  let outputValueSource = Buffer.concat([signatureInput, signatureValue])
+  hash512 = crypto.createHash('sha512')
+  let expectedOutputValue = hash512.update(outputValueSource).digest('hex')
+  return pulse.outputValue.toLowerCase() === expectedOutputValue
 }
 
-let _parseBeaconResponse = (xml, cb) => {
-  xml2js.parseString(xml, (err, parsed) => {
-    if (err) {
-      return cb('XML Parsing Error')
-    }
-
-    if (
-      !parsed ||
-      !parsed.record ||
-      !parsed.record.version ||
-      !parsed.record.frequency ||
-      !parsed.record.timeStamp ||
-      !parsed.record.seedValue ||
-      !parsed.record.previousOutputValue ||
-      !parsed.record.signatureValue ||
-      !parsed.record.outputValue ||
-      !parsed.record.statusCode ||
-      !parsed.record.outputValue
-    ) {
-      return cb('Missing attributes in server response')
-    }
-
-    let obj = {}
-
-    // A simple version string, e.g. “Version 1.0”
-    obj.version = parsed.record.version[0]
-
-    // The time interval, in seconds, between expected records
-    obj.frequency = parseInt(parsed.record.frequency[0], 10)
-
-    // The time the seed value was generated as the number of
-    // seconds since January 1, 1970
-    obj.timeStamp = parseInt(parsed.record.timeStamp[0], 10)
-
-    // Convert timestamp in seconds to ms and output ISO8601 string
-    var date = new Date(parseInt(parsed.record.timeStamp[0], 10) * 1000)
-    obj.timeStampISO8601 = date.toISOString()
-
-    // A seed value represented as a 64 byte (512-bit) hex string value
-    obj.seedValue = parsed.record.seedValue[0]
-
-    // The SHA-512 hash value for the previous record - 64 byte hex string
-    obj.previousOutputValue = parsed.record.previousOutputValue[0]
-
-    // A digital signature (RSA) computed over (in order):
-    // version, frequency, timeStamp, seedValue, previousHashValue, errorCode
-    // Note: Except for version, the hash is on the byte representations and
-    // not the string representations of the data values
-    obj.signatureValue = parsed.record.signatureValue[0]
-
-    // The SHA-512 hash of the signatureValue as a 64 byte hex string
-    obj.outputValue = parsed.record.outputValue[0]
-
-    // The status code value:
-    // 0 - Chain intact, values all good
-    // 1 - Start of a new chain of values, previous hash value will be all zeroes
-    // 2 - Time between values is greater than the frequency, but the chain is still intact
-    obj.statusCode = parseInt(parsed.record.statusCode[0], 10)
-
-    obj.validSignature = isValidSignature(obj)
-
-    cb(null, obj)
-  })
-}
-
-let reverse = src => {
-  let buffer = new Buffer(src.length)
+function _reverseBuffer(src) {
+  let result = Buffer.alloc(src.length)
 
   for (let i = 0, j = src.length - 1; i <= j; ++i, --j) {
-    buffer[i] = src[j]
-    buffer[j] = src[i]
+    result[i] = src[j]
+    result[j] = src[i]
   }
 
-  return buffer
+  return result
 }
 
-let isValidSignature = res => {
-  // The hash record contains
-  //   Version number (ascii text)
-  //   Update frequency (4 bytes)
-  //   Time Stamp (8 bytes)
-  //   The HW RNG seedValue (64 bytes)
-  //   The previous output value, does the chaining (64 bytes)
-  //   Status code (4 bytes)
-  let certVerifier = crypto.createVerify('RSA-SHA512')
-  let buf4 = new Buffer(4)
-  certVerifier.update(res.version, 'ascii')
-  buf4.writeIntBE(res.frequency, 0, 4)
-  certVerifier.update(buf4)
-  certVerifier.update(new Int64BE(res.timeStamp).toBuffer())
-  certVerifier.update(Buffer.from(res.seedValue, 'hex'))
-  certVerifier.update(Buffer.from(res.previousOutputValue, 'hex'))
-  buf4.writeIntBE(res.statusCode, 0, 4)
-  certVerifier.update(buf4)
-
-  // duplicate this verifier since crypto.createVerify()
-  // does not allow itself to be called twice.
-  let keyVerifier = crypto.createVerify('RSA-SHA512')
-  keyVerifier.update(res.version, 'ascii')
-  buf4.writeIntBE(res.frequency, 0, 4)
-  keyVerifier.update(buf4)
-  keyVerifier.update(new Int64BE(res.timeStamp).toBuffer())
-  keyVerifier.update(Buffer.from(res.seedValue, 'hex'))
-  keyVerifier.update(Buffer.from(res.previousOutputValue, 'hex'))
-  buf4.writeIntBE(res.statusCode, 0, 4)
-  keyVerifier.update(buf4)
-
-  // Create a bytewise reversed version of the signature.
-  // This is necessary because Beacon signs with Microsoft CryptoAPI which outputs
-  // the signature as little-endian instead of big-endian
-  let signature = Buffer.from(res.signatureValue, 'hex')
-  let revSignature = reverse(signature)
-
-  // Auto-fallback from the pubkey that is used starting 8/8/2017
-  // to the original x509 cert used prior to that.
-  if (!keyVerifier.verify(BEACON_KEY, revSignature)) {
-    if (!certVerifier.verify(BEACON_CERT, revSignature)) {
-      return false
-    }
-  }
-
-  // The output value is the SHA-512 hash of the signature
-  let hash = crypto.createHash('sha512')
-  hash.update(signature)
-  return res.outputValue.toLowerCase() === hash.digest('hex')
-}
-
-let isValidTimestamp = timestamp => {
+function _isValidTimestamp(timestamp) {
   // Must be an Integer
   if (!timestamp === parseInt(timestamp, 10)) {
     return false
@@ -211,62 +306,51 @@ let isValidTimestamp = timestamp => {
   }
 
   // Must not be in the future
-  if (timestamp > exports.currentTimestampInSeconds()) {
+  if (timestamp > Date.now()) {
     return false
   }
 
   return true
 }
 
-// Given a number of minutes, return a valid
-// epoch timestamp (in seconds)
-exports.timestampInSecondsMinutesAgo = min => {
+// Public functions
+
+// Given a number of minutes, return a valid epoch timestamp
+function timestampMinutesAgo(min) {
   // Must be an Integer
   if (!min === parseInt(min, 10)) {
     return null
   }
-
-  let currTime = new Date().getTime()
-  let minInMs = min * 60000
-  let oldTime = new Date(currTime - minInMs)
-  return Math.round(oldTime.getTime() / 1000)
+  return Date.now() - min * 60000
 }
 
-// Return a valid epoch timestamp for the current
-// time (in seconds)
-exports.currentTimestampInSeconds = () => {
-  let d = new Date()
-  return Math.round(d.getTime() / 1000)
+async function getClosestPulseAsync(timestamp) {
+  if (!_isValidTimestamp(timestamp)) throw new Error('Invalid timestamp')
+  let result = await _getBeaconAsync(`pulse/time/${timestamp}`)
+  return result
 }
 
-exports.current = (timestamp, cb) => {
-  if (!isValidTimestamp(timestamp)) {
-    return cb('Invalid timestamp')
-  }
-  _getBeacon(timestamp, cb)
+async function getPreviousPulseAsync(timestamp) {
+  if (!_isValidTimestamp(timestamp)) throw new Error('Invalid timestamp')
+  let result = await _getBeaconAsync(`pulse/time/previous/${timestamp}`)
+  return result
 }
 
-exports.previous = (timestamp, cb) => {
-  if (!isValidTimestamp(timestamp)) {
-    return cb('Invalid timestamp')
-  }
-  _getBeacon('/previous/' + timestamp, cb)
+async function getNextPulseAsync(timestamp) {
+  if (!_isValidTimestamp(timestamp)) throw new Error('Invalid timestamp')
+  let result = await _getBeaconAsync(`pulse/time/next/${timestamp}`)
+  return result
 }
 
-exports.next = (timestamp, cb) => {
-  if (!isValidTimestamp(timestamp)) {
-    return cb('Invalid timestamp')
-  }
-  _getBeacon('/next/' + timestamp, cb)
+async function getMostRecentPulseAsync() {
+  let result = await _getBeaconAsync(`pulse/last`)
+  return result
 }
 
-exports.last = cb => {
-  _getBeacon('/last', cb)
-}
-
-exports.startChain = (timestamp, cb) => {
-  if (!isValidTimestamp(timestamp)) {
-    return cb('Invalid timestamp')
-  }
-  _getBeacon('/start-chain/' + timestamp, cb)
+module.exports = {
+  timestampMinutesAgo: timestampMinutesAgo,
+  getClosestPulseAsync: getClosestPulseAsync,
+  getPreviousPulseAsync: getPreviousPulseAsync,
+  getNextPulseAsync: getNextPulseAsync,
+  getMostRecentPulseAsync: getMostRecentPulseAsync
 }

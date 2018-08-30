@@ -38,7 +38,7 @@
   "dependencies": {
     "int64-buffer": "^0.1.10",
     "request": "^2.88.0",
-    "xml2js": "^0.4.19"
+    "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
     "eslint": "^5.4.0",
@@ -52,7 +52,23 @@
   },
   "scripts": {
     "test": "node_modules/.bin/mocha",
-    "watch": "node_modules/.bin/mocha -w"
+    "watch": "node_modules/.bin/mocha -w",
+    "eslint-check": "eslint --print-config . | eslint-config-prettier-check"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js}": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "license": "MIT"
 }
