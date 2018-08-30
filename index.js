@@ -5,53 +5,12 @@ const rp = require('request-promise-native')
 // Must have trailing slash
 const BEACON_V2_API_URI_BASE = 'https://beacon.nist.gov/beacon/2.0/'
 
-// The certificate (public key) used by beacon to sign a response
-const BEACON_V2_CERT = `-----BEGIN CERTIFICATE-----
-MIIHWzCCBkOgAwIBAgIQCrOnD+Dvk39rGwz3xX6StTANBgkqhkiG9w0BAQsFADBE
-MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMR4wHAYDVQQDExVE
-aWdpQ2VydCBHbG9iYWwgQ0EgRzIwHhcNMTgwMTEwMDAwMDAwWhcNMTkwMTExMTIw
-MDAwWjCBozELMAkGA1UEBhMCVVMxETAPBgNVBAgTCE1hcnlsYW5kMRUwEwYDVQQH
-EwxHYWl0aGVyc2J1cmcxNzA1BgNVBAoTLk5hdGlvbmFsIEluc3RpdHV0ZSBvZiBT
-dGFuZGFyZHMgYW5kIFRlY2hub2xvZ3kxEDAOBgNVBAsTB0lUTC9DU0QxHzAdBgNV
-BAMTFmVuZ2luZS5iZWFjb24ubmlzdC5nb3YwggIiMA0GCSqGSIb3DQEBAQUAA4IC
-DwAwggIKAoICAQDqdbhEDfBOCzCjW6cKBSKkkl8pc7v6VDDI21VAs5fOyZRoSwfW
-tHc9YkVoYBaNTfmUBW5Q8hWbk65VftCznjEFIa05ldME/ABGKSkQKFyC3ELsE4+e
-nkM1I9EJOt9dCSH9dSmzwjFf8C/fxhGqYEatH8GenuQ/FbU7shiigiqHUJU9SSVZ
-trH4qV7szmcIBd/VzVTgLFipF8nl6EoScEIdgOC+ZmRo0LLfB/ulUT7iaXuzB0GP
-ocMjwk4yfJgHNkHitgGMoDNYGVz4sU0QCtQSAXjjvwAMb+EzGBV08Zj2qNMEANKX
-cvdRRA340t3oC6PbmeW+7w+IRo0to8AqhUlSAobmty6pOUzykEdhg/g6FKOowQEz
-JZkhHd1/7Fh7XRHvc6EKz5tjAP+c5MUP9ni6O2N6uzrNbm94p0JmGk6DwJVWS0A1
-l7M/xjON3aZN2f2ZSlezurBh9GBWENniHUsG/iOJdtjb+VE8VCr+J3Ltn62CfbgU
-4aW+XbwHtZq+jtLzf2VKgHpeM4LKCzgQbhSbJNuuNCm2ib8PaS/f+kz+p9D8Rd/q
-Te4/w03a+bqZRBcql8K7n73ysT+r595oos6AQujj4rgOHU7byZDLRGbMHPhox4OD
-Dd7iYGhMHcfUez7FYJF0zNQafEt7iZP6U/PigtPoi3lJNPLcijbNcFNSowIDAQAB
-o4IC5zCCAuMwHwYDVR0jBBgwFoAUJG4rLdBqklFRJWkBqppHponnQCAwHQYDVR0O
-BBYEFB69FZvO+nhCyDuDd1uLZchw4+j3MCEGA1UdEQQaMBiCFmVuZ2luZS5iZWFj
-b24ubmlzdC5nb3YwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMB
-BggrBgEFBQcDAjB3BgNVHR8EcDBuMDWgM6Axhi9odHRwOi8vY3JsMy5kaWdpY2Vy
-dC5jb20vRGlnaUNlcnRHbG9iYWxDQUcyLmNybDA1oDOgMYYvaHR0cDovL2NybDQu
-ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0R2xvYmFsQ0FHMi5jcmwwTAYDVR0gBEUwQzA3
-BglghkgBhv1sAQEwKjAoBggrBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQu
-Y29tL0NQUzAIBgZngQwBAgIwdAYIKwYBBQUHAQEEaDBmMCQGCCsGAQUFBzABhhho
-dHRwOi8vb2NzcC5kaWdpY2VydC5jb20wPgYIKwYBBQUHMAKGMmh0dHA6Ly9jYWNl
-cnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEdsb2JhbENBRzIuY3J0MAkGA1UdEwQC
-MAAwggEFBgorBgEEAdZ5AgQCBIH2BIHzAPEAdgC72d+8H4pxtZOUI5eqkntHOFeV
-CqtS6BqQlmQ2jh7RhQAAAWDgpJnPAAAEAwBHMEUCIQC1eW0bNSeOZNYU8Of5/oZr
-fruiiiIYK/QKct/hCsXgdwIgS5/nMOviHGu2/FLTMkWFAva+wBVGNrsRdbD6yLoQ
-BNgAdwCHdb/nWXz4jEOZX73zbv9WjUdWNv9KtWDBtOr/XqCDDwAAAWDgpJm5AAAE
-AwBIMEYCIQCq1AvkODGe/zTX56kishId42HRCiEDa1/Wq8F9/DOabwIhAI5UbEeE
-Q20nuadFVxpJgirXFYpAzjlr6/emIXRc5E1LMA0GCSqGSIb3DQEBCwUAA4IBAQAs
-WjP0Sj4r2nHWLKi45aUwhS+WZzq3cDPa92QDP6LnFTtzUicPpOyLYcWOsc7SKyGi
-BlWgxHp9vmoO+25gCXSbet42Yl1PXFhTpZcPHPxO/BknRGe9CY1pmOOyjsxwMZ8a
-qH2He7anCpHk5AEfLX0F+WHjEtnYBrRhMM6GtftHXXxuAhGuH0zmzbwakREOoWNO
-Q2iTFVBb9UybxHbl9r0rVD3x5FpRrTf90l5dhrERzhtjone/DtQU/5wRagRTKjeQ
-VaCu59An0vNCJYVWPbOypZCRdbcKlcd3GoMx2DosfFcdgSLR1h9+O0y3DsonJgiT
-Q2l+vxzeaIsZqUEYrLaq
------END CERTIFICATE-----`
+// local cache of certificates
+let certs = {}
 
 // Private internal functions
 
-async function _getBeaconAsync(path) {
+async function _getBeaconAsync(path, validateAsPulse = true) {
   let options = {
     method: 'GET',
     uri: BEACON_V2_API_URI_BASE + path,
@@ -61,13 +20,15 @@ async function _getBeaconAsync(path) {
     timeout: 5000
   }
   let response = await rp(options)
-  let isValid = await _validateBeaconResponseAsync(response.body.pulse)
-  if (!isValid) throw new Error('Unable to validate server response')
+  if (validateAsPulse) {
+    let isValid = await _validateBeaconResponseAsync(response.body.pulse)
+    if (!isValid) throw new Error('Unable to validate server response')
+  }
   return response.body
 }
 
 async function _validateBeaconResponseAsync(pulse) {
-  if (!pulse) throw new Error('Missing attribute [pulse] in server response')
+  // if (!pulse) throw new Error('Missing attribute [pulse] in server response')
   if (!pulse.hasOwnProperty('uri'))
     throw new Error('Missing attribute [puls.uri] in server response')
   if (!pulse.hasOwnProperty('version'))
@@ -270,7 +231,17 @@ async function _validateSignatureAsync(pulse) {
 
   let certVerifier = crypto.createVerify('RSA-SHA512')
   certVerifier.update(signatureInput)
-  if (!certVerifier.verify(BEACON_V2_CERT, signatureValue)) {
+
+  let cert = certs[pulse.certificateId]
+  // if that cert if undefined, retreive from NIST and cache
+  if (!cert) {
+    let newCert = await getCertificateByIdAsync(pulse.certificateId)
+    if (newCert) {
+      certs[pulse.certificateId] = newCert
+      cert = certs[pulse.certificateId]
+    }
+  }
+  if (!certVerifier.verify(cert, signatureValue)) {
     return false
   }
 
@@ -343,11 +314,18 @@ async function getPulseByChainAndPulseIndexAsync(chainIndex, pulseIndex) {
   return result
 }
 
+async function getCertificateByIdAsync(certificateId) {
+  let result = await _getBeaconAsync(`certificate/${certificateId}`, false)
+  // ensure a line break after -----BEGIN CERTIFICATE----- (NIST results lack one)
+  return `${result.slice(0, 27)}\n${result.slice(27)}`
+}
+
 module.exports = {
   timestampMinutesAgo: timestampMinutesAgo,
   getClosestPulseAsync: getClosestPulseAsync,
   getPreviousPulseAsync: getPreviousPulseAsync,
   getNextPulseAsync: getNextPulseAsync,
   getMostRecentPulseAsync: getMostRecentPulseAsync,
-  getPulseByChainAndPulseIndexAsync: getPulseByChainAndPulseIndexAsync
+  getPulseByChainAndPulseIndexAsync: getPulseByChainAndPulseIndexAsync,
+  getCertificateByIdAsync: getCertificateByIdAsync
 }
