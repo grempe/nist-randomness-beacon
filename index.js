@@ -283,17 +283,6 @@ async function _validateSignatureAsync(pulse) {
   return pulse.outputValue.toLowerCase() === expectedOutputValue
 }
 
-function _reverseBuffer(src) {
-  let result = Buffer.alloc(src.length)
-
-  for (let i = 0, j = src.length - 1; i <= j; ++i, --j) {
-    result[i] = src[j]
-    result[j] = src[i]
-  }
-
-  return result
-}
-
 function _isValidTimestamp(timestamp) {
   // Must be an Integer
   if (!timestamp === parseInt(timestamp, 10)) {
@@ -347,10 +336,18 @@ async function getMostRecentPulseAsync() {
   return result
 }
 
+async function getPulseByChainAndPulseIndexAsync(chainIndex, pulseIndex) {
+  if (!(chainIndex > 0)) throw new Error('Invalid chainIndex')
+  if (!(pulseIndex > 0)) throw new Error('Invalid pulseIndex')
+  let result = await _getBeaconAsync(`chain/${chainIndex}/pulse/${pulseIndex}`)
+  return result
+}
+
 module.exports = {
   timestampMinutesAgo: timestampMinutesAgo,
   getClosestPulseAsync: getClosestPulseAsync,
   getPreviousPulseAsync: getPreviousPulseAsync,
   getNextPulseAsync: getNextPulseAsync,
-  getMostRecentPulseAsync: getMostRecentPulseAsync
+  getMostRecentPulseAsync: getMostRecentPulseAsync,
+  getPulseByChainAndPulseIndexAsync: getPulseByChainAndPulseIndexAsync
 }
