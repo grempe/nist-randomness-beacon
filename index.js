@@ -34,7 +34,7 @@ function _nistQuery(path, validateAsPulse = true) {
           resolve(response.body)
         }
       })
-      .catch(err => reject(err))
+      .catch(err => reject(err.message || err))
   })
 }
 
