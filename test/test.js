@@ -4,6 +4,23 @@ const beacon = require('../index')
 const testTimestamp = 1535650993225
 
 describe('getCertificateById', function() {
+  it('should throw the proper error with bad certId', function() {
+    return new Promise((resolve, reject) => {
+      beacon
+        .getCertificateById('bad')
+        .then(() => {
+          reject()
+        })
+        .catch(err => {
+          err.should.have.property('statusCode', 404)
+          err.should.have.property(
+            'error',
+            'Certificate with requested hash value was not found.'
+          )
+          resolve()
+        })
+    })
+  })
   it('should return the expected value', function() {
     let certId =
       '5501e3d72bc42f3b96e16de4dcadcb16768e109662bd16d667d5fd9aee585af31bbdc5dd4f53592276064b53dddd76c8f3604b2a41db6e09f78f82bb5d6569e7'
