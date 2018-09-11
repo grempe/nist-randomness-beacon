@@ -354,8 +354,10 @@ function getCertificateById(certificateId) {
   return new Promise((resolve, reject) => {
     _nistQuery(`certificate/${certificateId}`, false)
       .then(result => {
-        // ensure a line break after -----BEGIN CERTIFICATE----- (NIST results lack one)
-        resolve(`${result.slice(0, 27)}\r\n${result.slice(27)}`)
+        // ensure a line break after -----BEGIN CERTIFICATE----- (current (9/11/18) NIST results lack one)
+        if (/-----BEGIN CERTIFICATE-----./i.test(result))
+          result = `${result.slice(0, 27)}\r\n${result.slice(27)}`
+        resolve(result)
       })
       .catch(err => reject(err))
   })
