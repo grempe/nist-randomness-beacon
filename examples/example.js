@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var beacon = require('../index.js')
 
 async function start() {
